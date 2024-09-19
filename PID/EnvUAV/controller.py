@@ -22,11 +22,9 @@ class PositionPID:
         self.P = P
         self.D = D
 
-    def computControl(self,
-                      current_x,
-                      target):
+    def computControl(self, current_x, target):
         e = target - current_x
-        vel_e = 0 - (current_x - self.last_x)/ self.control_time_step
+        vel_e = 0 - (current_x - self.last_x) / self.control_time_step
         self.last_x = current_x
         output = self.P * e + self.D * vel_e
         return np.clip(output, -1, 1)
@@ -44,19 +42,18 @@ class AttitudePID:
 
     def reset(self):
         pass
-    
+
     def set_param(self, P, D):
         self.P = P
         self.D = D
 
-    def computControl(self,
-                      ang,
-                      target,
-                      ang_vel):
+    def computControl(self, ang, target, ang_vel):
         R = np.reshape(p.getMatrixFromQuaternion(p.getQuaternionFromEuler(ang)), [3, 3])
-        R_d = np.reshape(p.getMatrixFromQuaternion(p.getQuaternionFromEuler(target)), [3, 3])
-        e_R = (np.matmul(R_d.T, R) - np.matmul(R.T, R_d))/2
-        e = np.array([e_R[1,2], e_R[2,0], e_R[0,1]]) #x:[1,2], y[2, 0], z[0,1]
+        R_d = np.reshape(
+            p.getMatrixFromQuaternion(p.getQuaternionFromEuler(target)), [3, 3]
+        )
+        e_R = (np.matmul(R_d.T, R) - np.matmul(R.T, R_d)) / 2
+        e = np.array([e_R[1, 2], e_R[2, 0], e_R[0, 1]])  # x:[1,2], y[2, 0], z[0,1]
         vel_e = ang_vel
         output = self.P * e - self.D * vel_e
         return np.clip(output, -1, 1)
