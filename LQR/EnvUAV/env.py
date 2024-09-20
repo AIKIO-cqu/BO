@@ -31,10 +31,6 @@ class YawControlEnv:
         self.target = None
         self.uav = None
 
-        # self.x_controller = PositionPID(P=1.732, I=0, D=1.366)
-        # self.y_controller = PositionPID(P=1.732, I=0, D=1.366)
-        # self.z_controller = PositionPID(P=2.58, I=0, D=1.42)
-        # self.attitude_controller = AttitudePID(P=10, I=0, D=1.41)
         self.x_controller = PositionLQR(
             A=np.array([[0, 1], [0, 0]]),
             B=np.array([[0], [4]]),
@@ -49,15 +45,15 @@ class YawControlEnv:
         )
         self.z_controller = PositionLQR(
             A=np.array([[0, 1], [0, 0]]),
-            B=np.array([[0], [4]]),
-            Q=np.array([[1.5, 0], [0, 0.5]]),
-            R=np.array([[0.5]]),
+            B=np.array([[0], [5]]),
+            Q=np.array([[10, 0], [0, 1.5]]),
+            R=np.array([[1.5]]),
         )
         self.attitude_controller = AttitudeLQR(
             A=np.array([[0, 1], [0, 0]]),
-            B=np.array([[0], [4]]),
-            Q=np.array([[1.5, 0], [0, 0.5]]),
-            R=np.array([[0.5]]),
+            B=np.array([[0], [20]]),
+            Q=np.array([[100, 0], [0, 1]]),
+            R=np.array([[1]]),
         )
 
     def close(self):

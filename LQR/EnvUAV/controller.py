@@ -21,7 +21,7 @@ class PositionLQR:
     def lqr(self):
         X = np.matrix(scipy.linalg.solve_continuous_are(self.A, self.B, self.Q, self.R))
         K = np.matrix(scipy.linalg.inv(self.R) * (self.B.T * X))
-        return K[0]
+        return K
 
     def reset(self):
         self.last_x = 0
@@ -52,7 +52,8 @@ class AttitudeLQR:
     def lqr(self):
         X = np.matrix(scipy.linalg.solve_continuous_are(self.A, self.B, self.Q, self.R))
         K = np.matrix(scipy.linalg.inv(self.R) * (self.B.T * X))
-        return K[0]
+        C = np.matrix([[1, 0], [0, -1]])
+        return np.dot(K, C)
 
     def reset(self):
         pass
@@ -69,5 +70,5 @@ class AttitudeLQR:
         state_e = np.array([e, vel_e])
         k = self.lqr()
         output = np.dot(k, state_e)
-        output = [output[0, 0], output[0, 1], output[0, 2]]
+        output = np.array([output[0, 0], output[0, 1], output[0, 2]])
         return np.clip(output, self.min_output, self.max_output)
