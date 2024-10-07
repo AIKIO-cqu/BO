@@ -2,31 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from EnvUAV.env import YawControlEnv
 import os
-import json
-import time
-
-
-# 计算峰值 Peak value
-def calculate_peak(x, target):
-    peak = max(x) if target >= 0 else min(x)
-    return (peak - target) / target
-
-
-# 计算 SSError
-def calculate_error(x, target):
-    x = np.array(x)[-50:]
-    diff = np.abs(x - target)
-    error = np.average(diff)
-    return error
-
-
-# 计算上升时间 Rise time
-def calculate_rise(x, target):
-    x = np.abs(x)
-    target = np.abs(target)
-    t1 = np.max(np.argwhere((x < target * 0.1)))
-    t2 = np.min(np.argwhere((x > target * 0.9)))
-    return (t2 - t1) * 0.01
+from utils import calculate_peak, calculate_error, calculate_rise
 
 
 path = os.path.dirname(os.path.realpath(__file__))
@@ -40,7 +16,7 @@ rise_container = []  # 保存上升时间
 
 # 进行3000次测试，每次生成一个随机目标并模拟无人机的轨迹
 # 期望位置和偏航角分别从[-5,-1]∪[1,5]和[-5π/6,-π/6]∪[π/6,5π/6]均匀采样
-for test_point in range(3000):
+for test_point in range(100):
     target = np.random.rand(4) * 4 + 1
     for i in range(4):
         if np.random.rand() <= 0.5:  # 以 0.5 的概率将目标值取反
@@ -67,20 +43,24 @@ for test_point in range(3000):
     error_container.append(error)
     rise_container.append(rise)
 
-    # 画图
+    # # 画图
     # index = np.array(range(500)) * 0.01
     # plt.suptitle("test_point: " + str(test_point))
-    # plt.subplot(3, 1, 1)
+    # plt.subplot(4, 1, 1)
     # plt.plot(index, trace[:, 0], label="x")
     # plt.plot(index, target[0] * np.ones(500), label="x_target")
     # plt.legend()
-    # plt.subplot(3, 1, 2)
+    # plt.subplot(4, 1, 2)
     # plt.plot(index, trace[:, 1], label="y")
     # plt.plot(index, target[1] * np.ones(500), label="y_target")
     # plt.legend()
-    # plt.subplot(3, 1, 3)
+    # plt.subplot(4, 1, 3)
     # plt.plot(index, trace[:, 2], label="z")
     # plt.plot(index, target[2] * np.ones(500), label="z_target")
+    # plt.legend()
+    # plt.subplot(4, 1, 4)
+    # plt.plot(index, trace[:, 3], label="yaw")
+    # plt.plot(index, target[3] * np.ones(500), label="yaw_target")
     # plt.legend()
     # plt.show()
 

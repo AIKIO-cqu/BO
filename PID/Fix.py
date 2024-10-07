@@ -1,15 +1,14 @@
 import time
 from EnvUAV.env import YawControlEnv
 import os
-import json
 import numpy as np
 import matplotlib.pyplot as plt
 from animation import animation_Fix
+from utils import printPID, calculate_peak, calculate_error, calculate_rise
 
 
 def main():
     path = os.path.dirname(os.path.realpath(__file__))
-
     env = YawControlEnv()
 
     pos = []
@@ -29,7 +28,7 @@ def main():
 
     name = "Fixed1"
     env.reset(base_pos=np.array([5, -5, 2]), base_ori=np.array([0, 0, 0]))
-    targets = np.array([[0, 0, 0, 0]])
+    targets = np.array([[0, 0, 0, np.pi / 3]])
 
     start_time = time.time()
 
@@ -57,6 +56,42 @@ def main():
     end_time = time.time()
     total_time = end_time - start_time
     print("total_time", total_time)  # 总计算时间
+
+    # 打印PID参数
+    printPID(env)
+
+    # 平均总误差
+    error_x = np.array(x) - np.array(x_target)
+    error_y = np.array(y) - np.array(y_target)
+    error_z = np.array(z) - np.array(z_target)
+    error_yaw = np.array(yaw) - np.array(yaw_target)
+    error_total = (
+        np.abs(error_x) + np.abs(error_y) + np.abs(error_z) + np.abs(error_yaw)
+    )
+    print("error_x", np.mean(np.abs(error_x)))
+    print("error_y", np.mean(np.abs(error_y)))
+    print("error_z", np.mean(np.abs(error_z)))
+    print("error_yaw", np.mean(np.abs(error_yaw)))
+    print("error_total", np.mean(error_total))
+    print("=====================================")
+
+    # 计算峰值误差、误差和上升时间
+    trace = np.concatenate(
+        [
+            np.array(x).reshape(-1, 1),
+            np.array(y).reshape(-1, 1),
+            np.array(z).reshape(-1, 1),
+            np.array(yaw).reshape(-1, 1),
+        ],
+        axis=1,
+    )
+    peak = [calculate_peak(trace[:, i], target[i]) for i in range(4)]
+    error = [calculate_error(trace[:, i], target[i]) for i in range(4)]
+    rise = [calculate_rise(trace[:, i], target[i]) for i in range(4)]
+    print("peak", peak)
+    print("error", error)
+    print("rise", rise)
+    print("=====================================")
 
     # 画图
     index = np.array(range(len(x))) * 0.01

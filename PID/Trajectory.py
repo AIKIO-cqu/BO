@@ -18,6 +18,7 @@ def main():
     env.reset(base_pos=np.array([0, 0, 0]), base_ori=np.array([0, 0, 0]))
 
     length = 5000
+
     # name = "Four-leaf clover"  # 四叶草形状
     # index = np.array(range(length)) / length * 2
     # tx = 2 * np.sin(2 * np.pi * index) * np.cos(np.pi * index)
@@ -35,14 +36,20 @@ def main():
     tpsi = np.sin(2 * np.pi * index) * np.pi / 3 * 2
 
     targets = np.vstack([tx, ty, tz, tpsi]).T
+
     # np.save(path + "/PID_" + name + "_targets.npy", targets)
 
+    start_time = time.time()
     for i in range(length):
         target = targets[i, :]
         env.step(target)
 
         pos.append(env.current_pos.tolist())
         ang.append(env.current_ori.tolist())
+    env.close()
+    end_time = time.time()
+    total_time = end_time - start_time
+    print("total_time", total_time)  # 总计算时间
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection="3d")
@@ -113,6 +120,7 @@ def main():
     ang_error = np.sqrt(np.sum((ang - targets[:, 3:]) ** 2, axis=1))
     print("pos_error", np.mean(pos_error), np.std(pos_error))
     print("ang_error", np.mean(ang_error), np.std(ang_error))
+    print("error_total", np.mean(pos_error) + np.mean(ang_error))  # 平均总误差
 
     # 动画
     animation_Trajectory(

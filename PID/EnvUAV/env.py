@@ -38,12 +38,6 @@ class YawControlEnv:
         self.z_controller = PositionPID(P=20, I=0, D=10.5)
         self.attitude_controller = AttitudePID(P=20, I=0, D=3.324)
 
-        # 另一套参数，效果更好
-        # self.x_controller = PositionPID(P=1.732, I=0, D=1.366)
-        # self.y_controller = PositionPID(P=1.732, I=0, D=1.366)
-        # self.z_controller = PositionPID(P=2.58, I=0, D=1.42)
-        # self.attitude_controller = AttitudePID(P=10, I=0, D=1.41)
-
     def close(self):
         p.disconnect(self.client)
 

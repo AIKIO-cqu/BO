@@ -3,14 +3,14 @@ from EnvUAV.env import YawControlEnv
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from bayes_opt import BayesianOptimization
+from skopt import gp_minimize
+from tqdm import tqdm
 from utils import printPID
-from animation import animation_Fix
 
 
-def objective(P, D):
+def objective(params):
     env = YawControlEnv()
-    env.y_controller.set_param(P, D)
+    env.attitude_controller.set_param(params[0], params[1])
 
     pos = []
     ang = []
@@ -58,18 +58,31 @@ def objective(P, D):
 
 
 def optimize():
-    pbounds = {"P": (0.1, 2), "D": (0.1, 2)}
-    optimizer = BayesianOptimization(f=objective, pbounds=pbounds, random_state=1)
-    optimizer.maximize(n_iter=1000)
-    print(optimizer.max)
-    return optimizer.max
+    space = [(0.1, 5.0), (0.1, 1.0)]
+    n = 100
+
+    # 创建一个 tqdm 进度条
+    pbar = tqdm(total=n)
+
+    # 定义一个回调函数来更新进度条
+    def update_pbar(res):
+        pbar.update()
+
+    res = gp_minimize(
+        objective, space, n_calls=n, callback=[update_pbar], random_state=0
+    )
+
+    pbar.close()
+
+    print(res.x)
+    return res.x
 
 
 def main(result):
     path = os.path.dirname(os.path.realpath(__file__))
 
     env = YawControlEnv()
-    env.y_controller.set_param(result["params"]["P"], result["params"]["D"])
+    env.attitude_controller.set_param(result[0], result[1])
 
     pos = []
     ang = []
@@ -119,7 +132,7 @@ def main(result):
     # 打印PID参数
     printPID(env)
 
-    # 平均总误差
+    # 误差
     error_x = np.array(x_target) - np.array(x)
     error_y = np.array(y_target) - np.array(y)
     error_z = np.array(z_target) - np.array(z)
@@ -131,7 +144,7 @@ def main(result):
     print("error_y:", np.mean(np.abs(error_y)))
     print("error_z:", np.mean(np.abs(error_z)))
     print("error_yaw:", np.mean(np.abs(error_yaw)))
-    print("error_total:", np.mean(error_total))
+    print("error_total:", np.mean(error_total))  # 平均总误差
 
     # 画图
     index = np.array(range(len(x))) * 0.01
@@ -181,17 +194,6 @@ def main(result):
     # np.save(path + "/PID_" + name + "_pos.npy", pos)
     # np.save(path + "/PID_" + name + "_ang.npy", ang)
 
-    # 动画
-    animation_Fix(
-        t_all=np.array(range(len(x))) * 0.01,
-        dt=0.01,
-        x_list=x,
-        y_list=y,
-        z_list=z,
-        x_traget=targets[:, 0],
-        y_traget=targets[:, 1],
-        z_traget=targets[:, 2],
-    )
 
 if __name__ == "__main__":
     result = optimize()
