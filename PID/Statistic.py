@@ -7,7 +7,7 @@ from utils import calculate_peak, calculate_error, calculate_rise
 
 path = os.path.dirname(os.path.realpath(__file__))
 env = YawControlEnv()
-
+env.attitude_controller.set_param(2.6541642768986122, 0.372833690242626)
 
 target_container = []  # 保存目标值
 peak_container = []  # 保存峰值误差
@@ -16,7 +16,7 @@ rise_container = []  # 保存上升时间
 
 # 进行3000次测试，每次生成一个随机目标并模拟无人机的轨迹
 # 期望位置和偏航角分别从[-5,-1]∪[1,5]和[-5π/6,-π/6]∪[π/6,5π/6]均匀采样
-for test_point in range(100):
+for test_point in range(3000):
     target = np.random.rand(4) * 4 + 1
     for i in range(4):
         if np.random.rand() <= 0.5:  # 以 0.5 的概率将目标值取反

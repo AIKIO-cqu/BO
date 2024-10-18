@@ -1,10 +1,9 @@
 import time
 from EnvUAV.env import YawControlEnv
 import os
-import json
 import numpy as np
 import matplotlib.pyplot as plt
-from animation import animation_Trajectory
+from utils import animation_Trajectory
 from bayes_opt import BayesianOptimization
 
 
@@ -95,21 +94,24 @@ def main(result):
     env.reset(base_pos=np.array([0, 0, 0]), base_ori=np.array([0, 0, 0]))
 
     length = 5000
-    name = "Four-leaf clover"  # 四叶草形状
-    index = np.array(range(length)) / length * 2
-    tx = 2 * np.sin(2 * np.pi * index) * np.cos(np.pi * index)
-    ty = 2 * np.sin(2 * np.pi * index) * np.sin(np.pi * index)
-    tz = -np.sin(2 * np.pi * index) * np.cos(np.pi * index) - np.sin(
-        2 * np.pi * index
-    ) * np.sin(np.pi * index)
-    tpsi = np.sin(4 * np.pi * index) * np.pi / 4 * 3
 
-    # name = "Ellipse"  # 圆形
-    # index = np.array(range(length)) / length
-    # tx = 2 * np.cos(2 * np.pi * index)
-    # ty = 2 * np.sin(2 * np.pi * index)
-    # tz = -np.cos(2 * np.pi * index) - np.sin(2 * np.pi * index)
-    # tpsi = np.sin(2 * np.pi * index) * np.pi / 3 * 2
+    shape_type = 1
+    if shape_type == 0:
+        name = "Ellipse"  # 圆形
+        index = np.array(range(length)) / length
+        tx = 2 * np.cos(2 * np.pi * index)
+        ty = 2 * np.sin(2 * np.pi * index)
+        tz = -np.cos(2 * np.pi * index) - np.sin(2 * np.pi * index)
+        tpsi = np.sin(2 * np.pi * index) * np.pi / 3 * 2
+    else:
+        name = "Four-leaf clover"  # 四叶草形状
+        index = np.array(range(length)) / length * 2
+        tx = 2 * np.sin(2 * np.pi * index) * np.cos(np.pi * index)
+        ty = 2 * np.sin(2 * np.pi * index) * np.sin(np.pi * index)
+        tz = -np.sin(2 * np.pi * index) * np.cos(np.pi * index) - np.sin(
+            2 * np.pi * index
+        ) * np.sin(np.pi * index)
+        tpsi = np.sin(4 * np.pi * index) * np.pi / 4 * 3
 
     targets = np.vstack([tx, ty, tz, tpsi]).T
 

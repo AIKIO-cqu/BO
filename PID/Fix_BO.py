@@ -4,13 +4,15 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from bayes_opt import BayesianOptimization
-from utils import printPID
-from animation import animation_Fix
+from utils import printPID, animation_Fix
 
 
-def objective(P, D):
+def objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da):
     env = YawControlEnv()
-    env.y_controller.set_param(P, D)
+    env.x_controller.set_param(Px, Dx)
+    env.y_controller.set_param(Py, Dy)
+    env.z_controller.set_param(Pz, Dz)
+    env.attitude_controller.set_param(Pa, Da)
 
     pos = []
     ang = []
@@ -28,7 +30,7 @@ def objective(P, D):
     yaw_target = []
 
     env.reset(base_pos=np.array([5, -5, 2]), base_ori=np.array([0, 0, 0]))
-    targets = np.array([[0, 0, 0, 0]])
+    targets = np.array([[0, 0, 0, np.pi / 3]])
 
     for episode in range(len(targets)):
         target = targets[episode, :]
@@ -58,9 +60,18 @@ def objective(P, D):
 
 
 def optimize():
-    pbounds = {"P": (0.1, 2), "D": (0.1, 2)}
+    pbounds = {
+        "Px": (0.0, 5.0),
+        "Dx": (0.0, 5.0),
+        "Py": (0.0, 5.0),
+        "Dy": (0.0, 5.0),
+        "Pz": (15.0, 30.0),
+        "Dz": (5.0, 15.0),
+        "Pa": (15.0, 30.0),
+        "Da": (0.0, 5.0),
+    }
     optimizer = BayesianOptimization(f=objective, pbounds=pbounds, random_state=1)
-    optimizer.maximize(n_iter=1000)
+    optimizer.maximize(n_iter=4000)
     print(optimizer.max)
     return optimizer.max
 
@@ -69,7 +80,10 @@ def main(result):
     path = os.path.dirname(os.path.realpath(__file__))
 
     env = YawControlEnv()
-    env.y_controller.set_param(result["params"]["P"], result["params"]["D"])
+    env.x_controller.set_param(result["params"]["Px"], result["params"]["Dx"])
+    env.y_controller.set_param(result["params"]["Py"], result["params"]["Dy"])
+    env.z_controller.set_param(result["params"]["Pz"], result["params"]["Dz"])
+    env.attitude_controller.set_param(result["params"]["Pa"], result["params"]["Da"])
 
     pos = []
     ang = []
@@ -87,7 +101,7 @@ def main(result):
     yaw_target = []
 
     env.reset(base_pos=np.array([5, -5, 2]), base_ori=np.array([0, 0, 0]))
-    targets = np.array([[0, 0, 0, 0]])
+    targets = np.array([[0, 0, 0, np.pi / 3]])
 
     start_time = time.time()
 
@@ -192,6 +206,7 @@ def main(result):
         y_traget=targets[:, 1],
         z_traget=targets[:, 2],
     )
+
 
 if __name__ == "__main__":
     result = optimize()

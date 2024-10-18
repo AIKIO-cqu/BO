@@ -1,10 +1,9 @@
 import time
 from EnvUAV.env import YawControlEnv
 import os
-import json
 import numpy as np
 import matplotlib.pyplot as plt
-from animation import animation_Trajectory
+from utils import animation_Trajectory
 
 
 def main():
