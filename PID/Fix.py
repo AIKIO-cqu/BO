@@ -16,6 +16,11 @@ def main():
     path = os.path.dirname(os.path.realpath(__file__))
     env = YawControlEnv()
 
+    env.x_controller.set_param(1.0521396745685385, 0.7421040152707453)
+    env.y_controller.set_param(2.311113127250979, 1.585307734692255)
+    env.z_controller.set_param(19.532887903676716, 7.982997169839638)
+    env.attitude_controller.set_param(28.690173402437086, 2.79685651667318)
+
     pos = []
     ang = []
     x = []

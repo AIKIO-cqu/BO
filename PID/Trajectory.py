@@ -7,15 +7,15 @@ from utils import animation_Trajectory, printPID
 
 
 def main():
-    shape_type = 0
+    shape_type = 1
     path = os.path.dirname(os.path.realpath(__file__))
 
     env = YawControlEnv()
 
-    # env.x_controller.set_param(5.0, 1.2927390502890024)
-    # env.y_controller.set_param(5.0, 1.9068853449018406)
-    # env.z_controller.set_param(23.316334370813053, 5.0)
-    # env.attitude_controller.set_param(22.40380014127682, 5.0)
+    # env.x_controller.set_param(4.032282768794369, 0.43390537744435576)
+    # env.y_controller.set_param(3.206500928891281, 0.488340970672701)
+    # env.z_controller.set_param(28.503712827299978, 6.102621756119799)
+    # env.attitude_controller.set_param(15.133548660165884, 1.3266098092291834)
 
     pos = []
     ang = []

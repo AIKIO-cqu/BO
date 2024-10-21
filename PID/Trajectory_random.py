@@ -103,10 +103,10 @@ def main(result):
 
     env = YawControlEnv()
 
-    env.x_controller.set_param(result["params"]["Px"], result["params"]["Dx"])
-    env.y_controller.set_param(result["params"]["Py"], result["params"]["Dy"])
-    env.z_controller.set_param(result["params"]["Pz"], result["params"]["Dz"])
-    env.attitude_controller.set_param(result["params"]["Pa"], result["params"]["Da"])
+    env.x_controller.set_param(result["best_Px"], result["best_Dx"])
+    env.y_controller.set_param(result["best_Py"], result["best_Dy"])
+    env.z_controller.set_param(result["best_Pz"], result["best_Dz"])
+    env.attitude_controller.set_param(result["best_Pa"], result["best_Da"])
 
     pos = []
     ang = []

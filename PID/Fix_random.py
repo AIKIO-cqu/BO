@@ -84,12 +84,6 @@ def main(result):
     path = os.path.dirname(os.path.realpath(__file__))
     env = YawControlEnv()
 
-    # # 1000次迭代后的最优参数 平均总误差
-    # env.x_controller.set_param(2.508935239227194, 2.347125280326763)
-    # env.y_controller.set_param(1.970629641779923, 1.7580108721167143)
-    # env.z_controller.set_param(23.792342973589367, 11.004785796237298)
-    # env.attitude_controller.set_param(22.45551224390249, 3.883245039437792)
-
     env.x_controller.set_param(result["best_Px"], result["best_Dx"])
     env.y_controller.set_param(result["best_Py"], result["best_Dy"])
     env.z_controller.set_param(result["best_Pz"], result["best_Dz"])
