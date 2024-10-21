@@ -4,7 +4,13 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from bayes_opt import BayesianOptimization
-from utils import printPID, animation_Fix
+from utils import (
+    printPID,
+    animation_Fix,
+    calculate_peak,
+    calculate_error,
+    calculate_rise,
+)
 
 
 def objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da):
@@ -16,18 +22,6 @@ def objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da):
 
     pos = []
     ang = []
-    x = []
-    y = []
-    z = []
-    x_target = []
-    y_target = []
-    z_target = []
-    pitch = []
-    roll = []
-    yaw = []
-    pitch_target = []
-    roll_target = []
-    yaw_target = []
 
     env.reset(base_pos=np.array([5, -5, 2]), base_ori=np.array([0, 0, 0]))
     targets = np.array([[0, 0, 0, np.pi / 3]])
@@ -39,23 +33,11 @@ def objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da):
 
             pos.append(env.current_pos.tolist())
             ang.append(env.current_ori.tolist())
-            x.append(env.current_pos[0])
-            y.append(env.current_pos[1])
-            z.append(env.current_pos[2])
-            x_target.append(target[0])
-            y_target.append(target[1])
-            z_target.append(target[2])
-            yaw.append(env.current_ori[2])
-            yaw_target.append(target[3])
 
     env.close()
-    error_x = np.array(x_target) - np.array(x)
-    error_y = np.array(y_target) - np.array(y)
-    error_z = np.array(z_target) - np.array(z)
-    error_yaw = np.array(yaw_target) - np.array(yaw)
-    error_total = (
-        np.abs(error_x) + np.abs(error_y) + np.abs(error_z) + np.abs(error_yaw)
-    )
+    pos_error = np.sqrt(np.sum((pos - targets[:, :3]) ** 2, axis=1))
+    ang_error = np.sqrt(np.sum((ang - targets[:, 3:]) ** 2, axis=1))
+    error_total = np.mean(pos_error) + np.mean(ang_error)
     return -np.mean(error_total)
 
 
@@ -133,19 +115,32 @@ def main(result):
     # 打印PID参数
     printPID(env)
 
-    # 平均总误差
-    error_x = np.array(x_target) - np.array(x)
-    error_y = np.array(y_target) - np.array(y)
-    error_z = np.array(z_target) - np.array(z)
-    error_yaw = np.array(yaw_target) - np.array(yaw)
-    error_total = (
-        np.abs(error_x) + np.abs(error_y) + np.abs(error_z) + np.abs(error_yaw)
+    # 位置误差、角度误差
+    pos_error = np.sqrt(np.sum((pos - targets[:, :3]) ** 2, axis=1))
+    ang_error = np.sqrt(np.sum((ang - targets[:, 3:]) ** 2, axis=1))
+    error_total = np.mean(pos_error) + np.mean(ang_error)
+    print("pos_error", np.mean(pos_error), np.std(pos_error))
+    print("ang_error", np.mean(ang_error), np.std(ang_error))
+    print("error_total", error_total)  # 平均总误差
+    print("=====================================")
+
+    # 计算峰值误差、误差和上升时间
+    trace = np.concatenate(
+        [
+            np.array(x).reshape(-1, 1),
+            np.array(y).reshape(-1, 1),
+            np.array(z).reshape(-1, 1),
+            np.array(yaw).reshape(-1, 1),
+        ],
+        axis=1,
     )
-    print("error_x:", np.mean(np.abs(error_x)))
-    print("error_y:", np.mean(np.abs(error_y)))
-    print("error_z:", np.mean(np.abs(error_z)))
-    print("error_yaw:", np.mean(np.abs(error_yaw)))
-    print("error_total:", np.mean(error_total))
+    peak = [calculate_peak(trace[:, i], target[i]) for i in range(4)]
+    error = [calculate_error(trace[:, i], target[i]) for i in range(4)]
+    rise = [calculate_rise(trace[:, i], target[i]) for i in range(4)]
+    print("peak", peak)
+    print("error", error)
+    print("rise", rise)
+    print("=====================================")
 
     # 画图
     index = np.array(range(len(x))) * 0.01

@@ -12,9 +12,88 @@ from utils import (
 )
 
 
-def main():
+def objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da):
+    env = YawControlEnv()
+    env.x_controller.set_param(Px, Dx)
+    env.y_controller.set_param(Py, Dy)
+    env.z_controller.set_param(Pz, Dz)
+    env.attitude_controller.set_param(Pa, Da)
+
+    pos = []
+    ang = []
+
+    env.reset(base_pos=np.array([5, -5, 2]), base_ori=np.array([0, 0, 0]))
+    targets = np.array([[0, 0, 0, np.pi / 3]])
+
+    for episode in range(len(targets)):
+        target = targets[episode, :]
+        for ep_step in range(500):
+            env.step(target)
+
+            pos.append(env.current_pos.tolist())
+            ang.append(env.current_ori.tolist())
+
+    env.close()
+    pos_error = np.sqrt(np.sum((pos - targets[:, :3]) ** 2, axis=1))
+    ang_error = np.sqrt(np.sum((ang - targets[:, 3:]) ** 2, axis=1))
+    error_total = np.mean(pos_error) + np.mean(ang_error)
+    return np.mean(error_total)
+
+
+# 使用随机搜索算法优化PID参数
+def optimize():
+    best_error = 3.5
+    best_param = {
+        "best_Px": 0,
+        "best_Dx": 0,
+        "best_Py": 0,
+        "best_Dy": 0,
+        "best_Pz": 0,
+        "best_Dz": 0,
+        "best_Pa": 0,
+        "best_Da": 0,
+    }
+    for i in range(4000):
+        print(i)
+        Px = np.random.uniform(0, 5)
+        Dx = np.random.uniform(0, 5)
+        Py = np.random.uniform(0, 5)
+        Dy = np.random.uniform(0, 5)
+        Pz = np.random.uniform(15, 30)
+        Dz = np.random.uniform(5, 15)
+        Pa = np.random.uniform(15, 30)
+        Da = np.random.uniform(0, 5)
+        error = objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da)
+        if error < best_error:
+            print(i, "error: ", error, "params: ", Px, Dx, Py, Dy, Pz, Dz, Pa, Da)
+            best_error = error
+            best_param["best_Px"] = Px
+            best_param["best_Dx"] = Dx
+            best_param["best_Py"] = Py
+            best_param["best_Dy"] = Dy
+            best_param["best_Pz"] = Pz
+            best_param["best_Dz"] = Dz
+            best_param["best_Pa"] = Pa
+            best_param["best_Da"] = Da
+    print("best_error: ", best_error)
+    print("best_param: ", best_param)
+    return best_param
+
+
+def main(result):
     path = os.path.dirname(os.path.realpath(__file__))
     env = YawControlEnv()
+
+    # # 1000次迭代后的最优参数 平均总误差
+    # env.x_controller.set_param(2.508935239227194, 2.347125280326763)
+    # env.y_controller.set_param(1.970629641779923, 1.7580108721167143)
+    # env.z_controller.set_param(23.792342973589367, 11.004785796237298)
+    # env.attitude_controller.set_param(22.45551224390249, 3.883245039437792)
+
+    env.x_controller.set_param(result["best_Px"], result["best_Dx"])
+    env.y_controller.set_param(result["best_Py"], result["best_Dy"])
+    env.z_controller.set_param(result["best_Pz"], result["best_Dz"])
+    env.attitude_controller.set_param(result["best_Pa"], result["best_Da"])
 
     pos = []
     ang = []
@@ -69,9 +148,9 @@ def main():
     pos_error = np.sqrt(np.sum((pos - targets[:, :3]) ** 2, axis=1))
     ang_error = np.sqrt(np.sum((ang - targets[:, 3:]) ** 2, axis=1))
     error_total = np.mean(pos_error) + np.mean(ang_error)
-    print("pos_error", np.mean(pos_error))
-    print("ang_error", np.mean(ang_error))
-    print("error_total", error_total)
+    print("pos_error", np.mean(pos_error), np.std(pos_error))
+    print("ang_error", np.mean(ang_error), np.std(ang_error))
+    print("error_total", error_total)  # 平均总误差
     print("=====================================")
 
     # 计算峰值误差、误差和上升时间
@@ -154,4 +233,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    result = optimize()
+    main(result)

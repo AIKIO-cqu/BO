@@ -4,7 +4,9 @@ import os
 import json
 import numpy as np
 import matplotlib.pyplot as plt
-from animation import animation_Fix
+
+# from animation import animation_Fix
+from utils import animation_Fix
 
 
 def main():

@@ -4,18 +4,109 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from utils import animation_Trajectory, printPID
+from bayes_opt import BayesianOptimization
 
 
-def main():
-    shape_type = 0
+def objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da):
+    shape_type = 1
+    env = YawControlEnv()
+    env.x_controller.set_param(Px, Dx)
+    env.y_controller.set_param(Py, Dy)
+    env.z_controller.set_param(Pz, Dz)
+    env.attitude_controller.set_param(Pa, Da)
+
+    pos = []
+    ang = []
+
+    env.reset(base_pos=np.array([0, 0, 0]), base_ori=np.array([0, 0, 0]))
+
+    length = 5000
+    if shape_type == 0:
+        name = "Ellipse"  # 圆形
+        index = np.array(range(length)) / length
+        tx = 2 * np.cos(2 * np.pi * index)
+        ty = 2 * np.sin(2 * np.pi * index)
+        tz = -np.cos(2 * np.pi * index) - np.sin(2 * np.pi * index)
+        tpsi = np.sin(2 * np.pi * index) * np.pi / 3 * 2
+
+    elif shape_type == 1:
+        name = "Four-leaf clover"  # 四叶草形状
+        index = np.array(range(length)) / length * 2
+        tx = 2 * np.sin(2 * np.pi * index) * np.cos(np.pi * index)
+        ty = 2 * np.sin(2 * np.pi * index) * np.sin(np.pi * index)
+        tz = -np.sin(2 * np.pi * index) * np.cos(np.pi * index) - np.sin(
+            2 * np.pi * index
+        ) * np.sin(np.pi * index)
+        tpsi = np.sin(4 * np.pi * index) * np.pi / 4 * 3
+    else:
+        raise ValueError("shape_type must be 0 or 1")
+
+    targets = np.vstack([tx, ty, tz, tpsi]).T
+
+    for i in range(length):
+        target = targets[i, :]
+        env.step(target)
+
+        pos.append(env.current_pos.tolist())
+        ang.append(env.current_ori.tolist())
+    env.close()
+
+    pos_error = np.sqrt(np.sum((pos - targets[:, :3]) ** 2, axis=1))
+    ang_error = np.sqrt(np.sum((ang - targets[:, 3:]) ** 2, axis=1))
+    error_total = np.mean(pos_error) + np.mean(ang_error)
+    return np.mean(error_total)
+
+
+# 使用随机搜索算法优化PID参数
+def optimize():
+    best_error = 2.5
+    best_param = {
+        "best_Px": 0,
+        "best_Dx": 0,
+        "best_Py": 0,
+        "best_Dy": 0,
+        "best_Pz": 0,
+        "best_Dz": 0,
+        "best_Pa": 0,
+        "best_Da": 0,
+    }
+    for i in range(4000):
+        print(i)
+        Px = np.random.uniform(0, 5)
+        Dx = np.random.uniform(0, 5)
+        Py = np.random.uniform(0, 5)
+        Dy = np.random.uniform(0, 5)
+        Pz = np.random.uniform(15, 30)
+        Dz = np.random.uniform(5, 15)
+        Pa = np.random.uniform(15, 30)
+        Da = np.random.uniform(0, 5)
+        error = objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da)
+        if error < best_error:
+            print(i, "error: ", error, "params: ", Px, Dx, Py, Dy, Pz, Dz, Pa, Da)
+            best_error = error
+            best_param["best_Px"] = Px
+            best_param["best_Dx"] = Dx
+            best_param["best_Py"] = Py
+            best_param["best_Dy"] = Dy
+            best_param["best_Pz"] = Pz
+            best_param["best_Dz"] = Dz
+            best_param["best_Pa"] = Pa
+            best_param["best_Da"] = Da
+    print("best_error: ", best_error)
+    print("best_param: ", best_param)
+    return best_param
+
+
+def main(result):
+    shape_type = 1
     path = os.path.dirname(os.path.realpath(__file__))
 
     env = YawControlEnv()
 
-    # env.x_controller.set_param(5.0, 1.2927390502890024)
-    # env.y_controller.set_param(5.0, 1.9068853449018406)
-    # env.z_controller.set_param(23.316334370813053, 5.0)
-    # env.attitude_controller.set_param(22.40380014127682, 5.0)
+    env.x_controller.set_param(result["params"]["Px"], result["params"]["Dx"])
+    env.y_controller.set_param(result["params"]["Py"], result["params"]["Dy"])
+    env.z_controller.set_param(result["params"]["Pz"], result["params"]["Dz"])
+    env.attitude_controller.set_param(result["params"]["Pa"], result["params"]["Da"])
 
     pos = []
     ang = []
@@ -148,4 +239,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    result = optimize()
+    main(result)
