@@ -3,23 +3,96 @@ from EnvUAV.env import YawControlEnv
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+from bayes_opt import BayesianOptimization
 from utils import (
     printPID,
+    animation_Fix,
     calculate_peak,
     calculate_error,
     calculate_rise,
-    animation_Fix,
 )
 
 
-def main():
-    path = os.path.dirname(os.path.realpath(__file__))
+def objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da):
     env = YawControlEnv()
+    env.x_controller.set_param(Px, Dx)
+    env.y_controller.set_param(Py, Dy)
+    env.z_controller.set_param(Pz, Dz)
+    env.attitude_controller.set_param(Pa, Da)
 
-    # env.x_controller.set_param(1.6552928507360798, 1.171797376591723)
-    # env.y_controller.set_param(2.1824414946941384, 1.547258832295887)
-    # env.z_controller.set_param(21.675119654002213, 10.4064523303866)
-    # env.attitude_controller.set_param(17.46308007014951, 2.330575858704499)
+    pos = []
+    ang = []
+
+    env.reset(base_pos=np.array([5, -5, 2]), base_ori=np.array([0, 0, 0]))
+    targets = np.array([[0, 0, 0, np.pi / 3]])
+
+    for episode in range(len(targets)):
+        target = targets[episode, :]
+        for ep_step in range(500):
+            env.step(target)
+
+            pos.append(env.current_pos.tolist())
+            ang.append(env.current_ori.tolist())
+
+    env.close()
+
+    # 性能指标
+    trace = np.hstack([np.array(pos), np.array(ang)[:, 2].reshape(-1, 1)])
+    peak = [calculate_peak(trace[:, i], targets[0][i]) for i in range(4)]
+    error = [calculate_error(trace[:, i], targets[0][i]) for i in range(4)]
+    rise = [calculate_rise(trace[:, i], targets[0][i]) for i in range(4)]
+    cost = np.mean(np.abs(error)) + np.mean(np.abs(peak)) + np.mean(np.abs(rise))
+    return cost
+
+
+# 使用随机搜索算法优化PID参数
+def optimize():
+    best_error = 0.91
+    best_param = {
+        "best_Px": 0,
+        "best_Dx": 0,
+        "best_Py": 0,
+        "best_Dy": 0,
+        "best_Pz": 0,
+        "best_Dz": 0,
+        "best_Pa": 0,
+        "best_Da": 0,
+    }
+    for i in range(4000):
+        print(i)
+        Px = np.random.uniform(0, 5)
+        Dx = np.random.uniform(0, 5)
+        Py = np.random.uniform(0, 5)
+        Dy = np.random.uniform(0, 5)
+        Pz = np.random.uniform(15, 30)
+        Dz = np.random.uniform(5, 15)
+        Pa = np.random.uniform(15, 30)
+        Da = np.random.uniform(0, 5)
+        error = objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da)
+        if error < best_error:
+            print(i, "error: ", error, "params: ", Px, Dx, Py, Dy, Pz, Dz, Pa, Da)
+            best_error = error
+            best_param["best_Px"] = Px
+            best_param["best_Dx"] = Dx
+            best_param["best_Py"] = Py
+            best_param["best_Dy"] = Dy
+            best_param["best_Pz"] = Pz
+            best_param["best_Dz"] = Dz
+            best_param["best_Pa"] = Pa
+            best_param["best_Da"] = Da
+    print("best_error: ", best_error)
+    print("best_param: ", best_param)
+    return best_param
+
+
+def main(result):
+    path = os.path.dirname(os.path.realpath(__file__))
+
+    env = YawControlEnv()
+    env.x_controller.set_param(result["best_Px"], result["best_Dx"])
+    env.y_controller.set_param(result["best_Py"], result["best_Dy"])
+    env.z_controller.set_param(result["best_Pz"], result["best_Dz"])
+    env.attitude_controller.set_param(result["best_Pa"], result["best_Da"])
 
     pos = []
     ang = []
@@ -36,7 +109,6 @@ def main():
     roll_target = []
     yaw_target = []
 
-    name = "Fixed1"
     env.reset(base_pos=np.array([5, -5, 2]), base_ori=np.array([0, 0, 0]))
     targets = np.array([[0, 0, 0, np.pi / 3]])
 
@@ -70,33 +142,14 @@ def main():
     # 打印PID参数
     printPID(env)
 
-    # 位置误差、角度误差
-    pos_error = np.sqrt(np.sum((pos - targets[:, :3]) ** 2, axis=1))
-    ang_error = np.sqrt(np.sum((ang - targets[:, 3:]) ** 2, axis=1))
-    error_total = np.mean(pos_error) + np.mean(ang_error)
-    print("pos_error", np.mean(pos_error))
-    print("ang_error", np.mean(ang_error))
-    print("error_total", error_total)
-    print("=====================================")
-
-    # 计算峰值误差、误差和上升时间
-    trace = np.concatenate(
-        [
-            np.array(x).reshape(-1, 1),
-            np.array(y).reshape(-1, 1),
-            np.array(z).reshape(-1, 1),
-            np.array(yaw).reshape(-1, 1),
-        ],
-        axis=1,
-    )
-    peak = [calculate_peak(trace[:, i], target[i]) for i in range(4)]
-    error = [calculate_error(trace[:, i], target[i]) for i in range(4)]
-    rise = [calculate_rise(trace[:, i], target[i]) for i in range(4)]
+    # 性能指标
+    trace = np.hstack([np.array(pos), np.array(ang)[:, 2].reshape(-1, 1)])
+    peak = [calculate_peak(trace[:, i], targets[0][i]) for i in range(4)]
+    error = [calculate_error(trace[:, i], targets[0][i]) for i in range(4)]
+    rise = [calculate_rise(trace[:, i], targets[0][i]) for i in range(4)]
     print("peak", peak)
     print("error", error)
     print("rise", rise)
-    print(np.mean(np.abs(error)) + np.mean(np.abs(peak)) + np.mean(np.abs(rise)))
-    print("=====================================")
 
     # 画图
     index = np.array(range(len(x))) * 0.01
@@ -160,4 +213,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    result = optimize()
+    main(result)

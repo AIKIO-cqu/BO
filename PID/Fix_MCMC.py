@@ -14,12 +14,9 @@ from utils import (
 )
 
 
-def objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da):
+def objective(P, D):
     env = YawControlEnv()
-    env.x_controller.set_param(Px, Dx)
-    env.y_controller.set_param(Py, Dy)
-    env.z_controller.set_param(Pz, Dz)
-    env.attitude_controller.set_param(Pa, Da)
+    env.x_controller.set_param(P, D)
 
     pos = []
     ang = []
@@ -42,39 +39,38 @@ def objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da):
     return np.mean(error_total)
 
 
-def metropolis_hastings(P, chain):
-    Px, Dx, Py, Dy, Pz, Dz, Pa, Da = 0, 0, 0, 0, 0, 0, 0, 0
-    samples = []
+def metropolis_hastings(p, iter=1000):
+    x, y = 0.0, 0.0
+    error = p(x, y)
+    print("baseline:", error)
+    samples = np.zeros((iter, 3))
 
-    while True:
-        Px_, Dx_, Py_, Dy_, Pz_, Dz_, Pa_, Da_ = (
-            np.random.uniform(0, 5),
-            np.random.uniform(0, 5),
-            np.random.uniform(0, 5),
-            np.random.uniform(0, 5),
-            np.random.uniform(15, 30),
-            np.random.uniform(5, 15),
-            np.random.uniform(15, 30),
-            np.random.uniform(0, 5),
-        )
+    for i in range(iter):
+        x_star, y_star = np.array([x, y]) + np.random.normal(size=2)
+        error_star = p(x_star, y_star)
 
-        p_moving = min(
-            1,
-            P(Px, Dx, Py, Dy, Pz, Dz, Pa, Da)
-            / P(Px_, Dx_, Py_, Dy_, Pz_, Dz_, Pa_, Da_),
-        )
+        # 使用指数函数增加接受概率
+        if np.random.rand() < min(1, 0.5 * np.exp((error - error_star) / error)):
+            print(i, x_star, y_star, p(x_star, y_star))
+            x, y = x_star, y_star
+            error = error_star
+        samples[i] = np.array([x, y, error])
 
-        if scipy.stats.uniform.rvs() <= p_moving:
-            samples.append([Px_, Dx_, Py_, Dy_, Pz_, Dz_, Pa_, Da_])
-            Px, Dx, Py, Dy, Pz, Dz, Pa, Da = Px_, Dx_, Py_, Dy_, Pz_, Dz_, Pa_, Da_
-        else:
-            samples.append([Px, Dx, Py, Dy, Pz, Dz, Pa, Da])
-
-        if len(samples) >= chain:
-            break
-    return np.array(samples)
+    return samples
 
 
 if __name__ == "__main__":
     samples = metropolis_hastings(objective, 1000)
-    print(samples)
+
+    sns.jointplot(x=samples[:, 0], y=samples[:, 1])
+    plt.show()
+
+    # 绘图显示3个子图
+    fig, axs = plt.subplots(3, 1, figsize=(10, 6))
+    axs[0].plot(samples[:, 0])
+    axs[0].set_ylabel("P")
+    axs[1].plot(samples[:, 1])
+    axs[1].set_ylabel("D")
+    axs[2].plot(samples[:, 2])
+    axs[2].set_ylabel("Error")
+    plt.show()
