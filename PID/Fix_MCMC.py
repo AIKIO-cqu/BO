@@ -60,8 +60,8 @@ def metropolis_hastings(p, iter=1000):
 
 
 if __name__ == "__main__":
-    samples = metropolis_hastings(objective, 1000)
-
+    samples = metropolis_hastings(objective, 10000)
+    np.save("samples.npy", samples)
     sns.jointplot(x=samples[:, 0], y=samples[:, 1])
     plt.show()
 

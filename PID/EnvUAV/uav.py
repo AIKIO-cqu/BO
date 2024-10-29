@@ -63,13 +63,23 @@ class UAV(object):
         return speed_dot
 
     def apply_action(self, F, t):
+        # 得到电机速度的平方
         motor_speed_d_pow = np.matmul(self.MATRIX_INV, F)
         # print(F, motor_speed_d_pow)
+
+        # 计算中间变量 h，它是电机速度平方的平方根减去电机偏置 MOTOR_BIAS，再除以电机系数 MOTOR_COEFFICIENT。
         h = (motor_speed_d_pow**0.5 - self.MOTOR_BIAS) / self.MOTOR_COEFFICIENT
 
+        # 计算电机速度 motor_speed_d，它是电机系数 MOTOR_COEFFICIENT 乘以 h 再加上电机偏置 MOTOR_BIAS
         motor_speed_d = self.MOTOR_COEFFICIENT * h + self.MOTOR_BIAS
+
+        # 设置积分器的参数为计算得到的电机速度 motor_speed_d
         self.integrator.set_f_params(motor_speed_d)
+
+        # 使用积分器在时间步长 time_step 内进行积分，得到新的电机速度 motor_speed
         self.motor_speed = self.integrator.integrate(t, t + self.time_step)
+
+        # 将电机速度的平方乘以矩阵 MATRIX，得到推力和扭矩 thrust_torque
         thrust_torque = np.dot(self.MATRIX, self.motor_speed**2)
         force = np.array([0.0, 0.0, thrust_torque[0]])
         torque = thrust_torque[1:]
