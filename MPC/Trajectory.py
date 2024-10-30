@@ -17,21 +17,21 @@ def main():
     env.reset(base_pos=np.array([0, 0, 0]), base_ori=np.array([0, 0, 0]))
 
     length = 5000
-    # name = "Four-leaf clover"  # 四叶草形状
-    # index = np.array(range(length)) / length * 2
-    # tx = 2 * np.sin(2 * np.pi * index) * np.cos(np.pi * index)
-    # ty = 2 * np.sin(2 * np.pi * index) * np.sin(np.pi * index)
-    # tz = -np.sin(2 * np.pi * index) * np.cos(np.pi * index) - np.sin(
-    #     2 * np.pi * index
-    # ) * np.sin(np.pi * index)
-    # tpsi = np.sin(4 * np.pi * index) * np.pi / 4 * 3
+    name = "Four-leaf clover"  # 四叶草形状
+    index = np.array(range(length)) / length * 2
+    tx = 2 * np.sin(2 * np.pi * index) * np.cos(np.pi * index)
+    ty = 2 * np.sin(2 * np.pi * index) * np.sin(np.pi * index)
+    tz = -np.sin(2 * np.pi * index) * np.cos(np.pi * index) - np.sin(
+        2 * np.pi * index
+    ) * np.sin(np.pi * index)
+    tpsi = np.sin(4 * np.pi * index) * np.pi / 4 * 3
 
-    name = "Ellipse"  # 圆形
-    index = np.array(range(length)) / length
-    tx = 2 * np.cos(2 * np.pi * index)
-    ty = 2 * np.sin(2 * np.pi * index)
-    tz = -np.cos(2 * np.pi * index) - np.sin(2 * np.pi * index)
-    tpsi = np.sin(2 * np.pi * index) * np.pi / 3 * 2
+    # name = "Ellipse"  # 圆形
+    # index = np.array(range(length)) / length
+    # tx = 2 * np.cos(2 * np.pi * index)
+    # ty = 2 * np.sin(2 * np.pi * index)
+    # tz = -np.cos(2 * np.pi * index) - np.sin(2 * np.pi * index)
+    # tpsi = np.sin(2 * np.pi * index) * np.pi / 3 * 2
 
     targets = np.vstack([tx, ty, tz, tpsi]).T
     # np.save(path + "/MPC_" + name + "_targets.npy", targets)
@@ -110,7 +110,7 @@ def main():
 
     print("MPC ", name)
     pos_error = np.sqrt(np.sum((pos - targets[:, :3]) ** 2, axis=1))
-    ang_error = np.sqrt(np.sum((ang - targets[:, 3:]) ** 2, axis=1))
+    ang_error = np.degrees(np.abs((ang[:, 2] - targets[:, 3])))
     print("pos_error", np.mean(pos_error), np.std(pos_error))
     print("ang_error", np.mean(ang_error), np.std(ang_error))
 

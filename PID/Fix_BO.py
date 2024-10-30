@@ -35,8 +35,12 @@ def objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da):
             ang.append(env.current_ori.tolist())
 
     env.close()
+    
+    pos = np.array(pos)
+    ang = np.array(ang)
+
     pos_error = np.sqrt(np.sum((pos - targets[:, :3]) ** 2, axis=1))
-    ang_error = np.sqrt(np.sum((ang - targets[:, 3:]) ** 2, axis=1))
+    ang_error = np.degrees(np.abs((ang[:, 2] - targets[:, 3])))
     error_total = np.mean(pos_error) + np.mean(ang_error)
     return -np.mean(error_total)
 
@@ -115,9 +119,13 @@ def main(result):
     # 打印PID参数
     printPID(env)
 
+    # 将 pos 和 ang 列表转换为 NumPy 数组
+    pos = np.array(pos)
+    ang = np.array(ang)
+    
     # 位置误差、角度误差
     pos_error = np.sqrt(np.sum((pos - targets[:, :3]) ** 2, axis=1))
-    ang_error = np.sqrt(np.sum((ang - targets[:, 3:]) ** 2, axis=1))
+    ang_error = np.degrees(np.abs((ang[:, 2] - targets[:, 3])))
     error_total = np.mean(pos_error) + np.mean(ang_error)
     print("pos_error", np.mean(pos_error), np.std(pos_error))
     print("ang_error", np.mean(ang_error), np.std(ang_error))
