@@ -62,7 +62,7 @@ def objective(Px, Dx, Py, Dy, Pz, Dz, Pa, Da):
 
 # 使用随机搜索算法优化PID参数
 def optimize():
-    best_error = 2.5
+    best_error = 7.06
     best_param = {
         "best_Px": 0,
         "best_Dx": 0,

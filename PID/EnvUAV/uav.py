@@ -2,6 +2,7 @@ import pybullet as p
 import yaml
 import numpy as np
 from scipy.integrate import ode
+from .windModel import Wind
 
 
 class UAV(object):
@@ -83,6 +84,19 @@ class UAV(object):
         thrust_torque = np.dot(self.MATRIX, self.motor_speed**2)
         force = np.array([0.0, 0.0, thrust_torque[0]])
         torque = thrust_torque[1:]
+
+        # 加上风的扰动
+        wind = Wind("SINE", 2.0, 90, -15)
+        [velW, qW1, qW2] = wind.randomWind(t)  # velW是风速，qW1是风向，qW2是风仰角
+        # print("velW", velW, "qW1", qW1, "qW2", qW2)
+        # 通过风的扰动计算出风对无人机的力
+        Cd = 0.0027
+        force[0] += Cd * (velW * np.cos(qW1) * np.cos(qW2)) ** 2
+        force[1] += Cd * (velW * np.sin(qW1) * np.cos(qW2)) ** 2
+        force[2] += Cd * (velW * np.sin(qW2)) ** 2
+
+        # print("force", force, "torque", torque)
+
         # apply force and torque
         p.applyExternalForce(
             objectUniqueId=self.id,
