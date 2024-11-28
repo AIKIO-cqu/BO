@@ -17,14 +17,14 @@ def main():
     env.reset(base_pos=np.array([0, 0, 0]), base_ori=np.array([0, 0, 0]))
 
     length = 5000
-    name = "Four-leaf clover"  # 四叶草形状
-    index = np.array(range(length)) / length * 2
-    tx = 2 * np.sin(2 * np.pi * index) * np.cos(np.pi * index)
-    ty = 2 * np.sin(2 * np.pi * index) * np.sin(np.pi * index)
-    tz = -np.sin(2 * np.pi * index) * np.cos(np.pi * index) - np.sin(
-        2 * np.pi * index
-    ) * np.sin(np.pi * index)
-    tpsi = np.sin(4 * np.pi * index) * np.pi / 4 * 3
+    # name = "Four-leaf clover"  # 四叶草形状
+    # index = np.array(range(length)) / length * 2
+    # tx = 2 * np.sin(2 * np.pi * index) * np.cos(np.pi * index)
+    # ty = 2 * np.sin(2 * np.pi * index) * np.sin(np.pi * index)
+    # tz = -np.sin(2 * np.pi * index) * np.cos(np.pi * index) - np.sin(
+    #     2 * np.pi * index
+    # ) * np.sin(np.pi * index)
+    # tpsi = np.sin(4 * np.pi * index) * np.pi / 4 * 3
 
     # name = "Ellipse"  # 圆形
     # index = np.array(range(length)) / length
@@ -32,6 +32,14 @@ def main():
     # ty = 2 * np.sin(2 * np.pi * index)
     # tz = -np.cos(2 * np.pi * index) - np.sin(2 * np.pi * index)
     # tpsi = np.sin(2 * np.pi * index) * np.pi / 3 * 2
+
+    name = "Spiral"  # 半径先增大后减小的螺旋形状
+    index = np.array(range(length)) / length * 4  # 轨迹参数，4 圈
+    radius = 2 + 0.3 * np.sin(np.pi * index)  # 半径先增大后减小
+    tx = radius * np.cos(1.5 * np.pi * index)  # x 方向的螺旋
+    ty = radius * np.sin(1.5 * np.pi * index)  # y 方向的螺旋
+    tz = 0.5 * index - 1  # z 方向逐渐上升
+    tpsi = np.cos(2 * np.pi * index) * np.pi / 4  # 偏航角周期变化
 
     targets = np.vstack([tx, ty, tz, tpsi]).T
     # np.save(path + "/LQR_" + name + "_targets.npy", targets)
