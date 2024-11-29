@@ -421,3 +421,10 @@ def test_params(params, shape_type, length):
         y_traget=targets[:, 1],
         z_traget=targets[:, 2],
     )
+
+
+if __name__ == "__main__":
+    params = [4.748940157564426, 0.469647222284727, 4.992118011011425, 0.6634621009136538, 16.722161067485008, 5.699908009365622, 17.685060028970394, 0.47858791923934385]
+    test_params(params, shape_type=0, length=5000)
+    test_params(params, shape_type=1, length=5000)
+    test_params(params, shape_type=2, length=5000)

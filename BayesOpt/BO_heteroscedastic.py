@@ -1,4 +1,5 @@
 import numpy as np
+from datetime import datetime
 from EnvUAV.env_BO import YawControlEnv
 from utils import test_params, generate_target_trajectory
 from sklearn.gaussian_process import GaussianProcessRegressor
@@ -74,7 +75,7 @@ if __name__ == "__main__":
     )
 
     # 目标轨迹
-    shape_type_traj = 2  # 0: Circle, 1: Four-leaf clover, 2: Spiral
+    shape_type_traj = 1  # 0: Circle, 1: Four-leaf clover, 2: Spiral
     length_traj = 5000  # 轨迹长度
     target_trajectory, name_traj = generate_target_trajectory(
         shape_type_traj, length_traj
@@ -100,7 +101,7 @@ if __name__ == "__main__":
     gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10)
 
     # 优化循环
-    n_iterations = 100
+    n_iterations = 1000
     for i in range(n_iterations):
         # 高斯过程拟合
         noise_alpha = noise_model.predict(X_sample).ravel() ** 2 + 1e-6  # 动态噪声模型
@@ -141,6 +142,16 @@ if __name__ == "__main__":
     # 获取最优参数
     X_best = X_sample[np.argmin(y_sample)]
     y_best = np.min(y_sample)
+
+    # 定义存储文件路径
+    file_path = "best_params_log.txt"
+
+    # 获取当前时间戳
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # 将结果存储到文件中
+    with open(file_path, "a") as file:
+        file.write(f"Time: {timestamp}, X_best: {X_best.tolist()}, pos+0.1*ang, {name_traj}\n")
 
     print("=====================================")
     print("Optimized trajectory shape:", name_traj, " sim_time:", 0.01 * length_traj)
