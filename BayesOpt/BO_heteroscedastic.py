@@ -101,7 +101,7 @@ if __name__ == "__main__":
     gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=10)
 
     # 优化循环
-    n_iterations = 1000
+    n_iterations = 100
     for i in range(n_iterations):
         # 高斯过程拟合
         noise_alpha = noise_model.predict(X_sample).ravel() ** 2 + 1e-6  # 动态噪声模型
@@ -151,12 +151,14 @@ if __name__ == "__main__":
 
     # 将结果存储到文件中
     with open(file_path, "a") as file:
-        file.write(f"Time: {timestamp}, X_best: {X_best.tolist()}, pos+0.1*ang, {name_traj}\n")
+        file.write(
+            f"Time: {timestamp}, X_best: {X_best.tolist()}, pos+0.1*ang, {name_traj}\n"
+        )
 
     print("=====================================")
     print("Optimized trajectory shape:", name_traj, " sim_time:", 0.01 * length_traj)
     print(f"最优输入: {X_best}, 最优输出: {y_best}")
 
-    test_params(X_best, shape_type=0, length=length_traj)
-    test_params(X_best, shape_type=1, length=length_traj)
-    test_params(X_best, shape_type=2, length=length_traj)
+    test_params(X_best, length=length_traj, shape_type=0)
+    test_params(X_best, length=length_traj, shape_type=1)
+    test_params(X_best, length=length_traj, shape_type=2)

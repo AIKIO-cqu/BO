@@ -318,8 +318,8 @@ def generate_target_trajectory(shape_type, length):
     return target_trajectory, name
 
 
-# 测试 PID 参数
-def test_params(params, shape_type, length):
+# 测试 PID 参数 (指定轨迹)
+def test_fixed_traj(params, length, shape_type):
     env = YawControlEnv()
     env.new_PD_params(PD_params=params)
 
@@ -423,8 +423,106 @@ def test_params(params, shape_type, length):
     )
 
 
-if __name__ == "__main__":
-    params = [4.748940157564426, 0.469647222284727, 4.992118011011425, 0.6634621009136538, 16.722161067485008, 5.699908009365622, 17.685060028970394, 0.47858791923934385]
-    test_params(params, shape_type=0, length=5000)
-    test_params(params, shape_type=1, length=5000)
-    test_params(params, shape_type=2, length=5000)
+# 测试 PID 参数 (随机轨迹)
+def test_random_traj(params, length, targets):
+    env = YawControlEnv()
+    env.new_PD_params(PD_params=params)
+
+    pos = []
+    ang = []
+
+    env.reset(base_pos=np.array([0, 0, 0]), base_ori=np.array([0, 0, 0]))
+
+    name = "Random trajectory"
+    print("PID ", name)
+
+    for i in range(length):
+        target = targets[i, :]
+        env.step(target)
+
+        pos.append(env.current_pos.tolist())
+        ang.append(env.current_ori.tolist())
+    env.close()
+
+    # 打印PID参数
+    printPID(env)
+
+    # 将 pos 和 ang 列表转换为 NumPy 数组
+    pos = np.array(pos)
+    ang = np.array(ang)
+
+    # 位置误差、角度误差
+    pos_error = np.sqrt(np.sum((pos - targets[:, :3]) ** 2, axis=1))
+    ang_error = np.degrees(np.abs((ang[:, 2] - targets[:, 3])))
+    print("pos_error", np.mean(pos_error), np.std(pos_error))
+    print("ang_error", np.mean(ang_error), np.std(ang_error))
+    # print("error_total", np.mean(pos_error) + np.mean(ang_error))
+
+    # 画图
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+
+    position = np.array(pos)
+    px = position[:, 0]
+    py = position[:, 1]
+    pz = position[:, 2]
+    attitude = np.array(ang)
+    roll = attitude[:, 0]
+    pitch = attitude[:, 1]
+    yaw = attitude[:, 2]
+
+    ax.plot(px, py, pz, label="track")
+    ax.plot(targets[:, 0], targets[:, 1], targets[:, 2], label="target")
+    ax.view_init(azim=45.0, elev=30)
+    plt.legend()
+    plt.show()
+
+    index = np.array(range(length)) * 0.01
+    zeros = np.zeros_like(index)
+    plt.subplot(3, 2, 1)
+    plt.plot(index, px, label="x")
+    plt.plot(index, targets[:, 0], label="x_target")
+    plt.legend()
+
+    plt.subplot(3, 2, 2)
+    plt.plot(index, pitch, label="pitch")
+    plt.plot(index, zeros)
+    plt.legend()
+
+    plt.subplot(3, 2, 3)
+    plt.plot(index, py, label="y")
+    plt.plot(index, targets[:, 1], label="y_target")
+    plt.legend()
+
+    plt.subplot(3, 2, 4)
+    plt.plot(index, roll, label="roll")
+    plt.plot(index, zeros)
+    plt.legend()
+
+    plt.subplot(3, 2, 5)
+    plt.plot(index, pz, label="z")
+    plt.plot(index, targets[:, 2], label="z_target")
+    plt.legend()
+
+    plt.subplot(3, 2, 6)
+    plt.plot(index, yaw, label="yaw")
+    plt.plot(index, targets[:, 3], label="yaw_target")
+    plt.plot(index, zeros)
+    plt.legend()
+
+    plt.show()
+
+    pos = np.array(pos)
+    ang = np.array(ang)
+
+    # 动画
+    animation_Trajectory(
+        t_all=np.array(range(length)) * 0.01,
+        dt=0.01,
+        x_list=pos[:, 0],
+        y_list=pos[:, 1],
+        z_list=pos[:, 2],
+        x_traget=targets[:, 0],
+        y_traget=targets[:, 1],
+        z_traget=targets[:, 2],
+    )

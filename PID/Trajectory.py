@@ -7,25 +7,10 @@ from utils import animation_Trajectory, printPID
 
 
 def main():
-    shape_type = 2
+    shape_type = 0
     path = os.path.dirname(os.path.realpath(__file__))
 
     env = YawControlEnv()
-
-    # env.x_controller.set_param(4.6452, 1.7087)
-    # env.y_controller.set_param(1.2951, 0.4246)
-    # env.z_controller.set_param(17.8961, 5.4875)
-    # env.attitude_controller.set_param(14.0431, 2.6116)
-
-    # env.x_controller.set_param(4.84559504, 1.07012246)
-    # env.y_controller.set_param(4.17780039, 0.54792735)
-    # env.z_controller.set_param(22.11983158, 7.2157652)
-    # env.attitude_controller.set_param(14.56803996, 0.62461092)
-
-    # env.x_controller.set_param(3.26262624, 0.86701133)
-    # env.y_controller.set_param(4.75629136, 1.2187375)
-    # env.z_controller.set_param(29.96972789, 14.69728167)
-    # env.attitude_controller.set_param(11.38726855, 1.44614227)
 
     pos = []
     ang = []
@@ -53,8 +38,8 @@ def main():
         name = "Spiral"  # 半径先增大后减小的螺旋形状
         index = np.array(range(length)) / length * 4  # 轨迹参数，4 圈
         radius = 2 + 0.3 * np.sin(np.pi * index)  # 半径先增大后减小
-        tx = radius * np.cos(1.5*np.pi * index)  # x 方向的螺旋
-        ty = radius * np.sin(1.5*np.pi * index)  # y 方向的螺旋
+        tx = radius * np.cos(1.5 * np.pi * index)  # x 方向的螺旋
+        ty = radius * np.sin(1.5 * np.pi * index)  # y 方向的螺旋
         tz = 0.5 * index - 1  # z 方向逐渐上升
         tpsi = np.cos(2 * np.pi * index) * np.pi / 4  # 偏航角周期变化
     else:
