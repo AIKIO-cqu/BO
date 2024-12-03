@@ -1,7 +1,7 @@
 import numpy as np
 from datetime import datetime
 from EnvUAV.env_BO import YawControlEnv
-from utils import test_params, generate_target_trajectory
+from utils import test_fixed_traj, generate_target_trajectory
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C, WhiteKernel
 from sklearn.preprocessing import PolynomialFeatures
@@ -159,6 +159,6 @@ if __name__ == "__main__":
     print("Optimized trajectory shape:", name_traj, " sim_time:", 0.01 * length_traj)
     print(f"最优输入: {X_best}, 最优输出: {y_best}")
 
-    test_params(X_best, length=length_traj, shape_type=0)
-    test_params(X_best, length=length_traj, shape_type=1)
-    test_params(X_best, length=length_traj, shape_type=2)
+    test_fixed_traj(X_best, length=length_traj, shape_type=0)
+    test_fixed_traj(X_best, length=length_traj, shape_type=1)
+    test_fixed_traj(X_best, length=length_traj, shape_type=2)
