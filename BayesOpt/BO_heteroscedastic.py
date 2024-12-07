@@ -7,7 +7,6 @@ from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C, WhiteKern
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import make_pipeline
-import matplotlib.pyplot as plt
 from scipy.stats import norm
 import warnings
 from sklearn.exceptions import ConvergenceWarning
@@ -33,7 +32,7 @@ def simulate_trajectory_multi_control(targets, pid_params):
     ang = np.array(ang)
     pos_error = np.sqrt(np.sum((pos - targets[:, :3]) ** 2, axis=1))
     ang_error = np.degrees(np.abs((ang[:, 2] - targets[:, 3])))
-    return np.mean(pos_error) + np.mean(ang_error) * 0.1
+    return np.mean(pos_error) + np.mean(ang_error) * np.pi / 180
 
 
 # 定义 EI 采集函数
@@ -64,18 +63,18 @@ if __name__ == "__main__":
     bounds = np.array(
         [
             [0.0, 5.0],
+            [0.0, 2.0],
             [0.0, 5.0],
-            [0.0, 5.0],
-            [0.0, 5.0],
+            [0.0, 2.0],
             [15.0, 30.0],
             [5.0, 15.0],
-            [10.0, 20.0],
+            [10.0, 30.0],
             [0.0, 5.0],
         ]
     )
 
     # 目标轨迹
-    shape_type_traj = 1  # 0: Circle, 1: Four-leaf clover, 2: Spiral
+    shape_type_traj = 0  # 0: Circle, 1: Four-leaf clover, 2: Spiral
     length_traj = 5000  # 轨迹长度
     target_trajectory, name_traj = generate_target_trajectory(
         shape_type_traj, length_traj

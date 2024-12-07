@@ -3,10 +3,6 @@ from EnvUAV.env_BO import YawControlEnv
 from utils import test_fixed_traj, generate_target_trajectory
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, ConstantKernel as C, WhiteKernel
-from sklearn.preprocessing import PolynomialFeatures
-from sklearn.linear_model import LinearRegression
-from sklearn.pipeline import make_pipeline
-import matplotlib.pyplot as plt
 from scipy.stats import norm
 import warnings
 from sklearn.exceptions import ConvergenceWarning
@@ -90,11 +86,6 @@ if __name__ == "__main__":
             simulate_trajectory_multi_control(target_trajectory, X_sample[i])
         )
     y_sample = np.array(y_sample).reshape(-1, 1)
-
-    # # 初始化噪声模型（使用5阶多项式回归模型）
-    # noise_model = make_pipeline(PolynomialFeatures(degree=5), LinearRegression())
-    # initial_noise = np.abs(y_sample - np.mean(y_sample))  # 初始噪声近似
-    # noise_model.fit(X_sample, initial_noise)
 
     # 定义高斯过程回归器
     kernel = C(1.0, (1e-3, 1e3)) * RBF(1.0, (1e-2, 1e2)) + WhiteKernel(noise_level=1e-5)
