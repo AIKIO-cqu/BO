@@ -12,24 +12,23 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 
 # 模拟多控制器轨迹跟踪任务
-def simulate_trajectory_multi_control(targets, pid_params):
+def simulate_trajectory_multi_control(start_state, pid_params):
     env = YawControlEnv()
-    env.reset(base_pos=np.array([0, 0, 0]), base_ori=np.array([0, 0, 0]))
+    env.reset(base_pos=start_state[0:3], base_ori=np.array([0, 0, start_state[3]]))
     env.new_PD_params(PD_params=pid_params)
     pos = []
     ang = []
-    for i in range(len(targets)):
-        target = targets[i, :]
+    target = np.array([0, 0, 0, 0])
+    for i in range(500):
         env.step(target)
         pos.append(env.current_pos.tolist())
         ang.append(env.current_ori.tolist())
     env.close()
     pos = np.array(pos)
     ang = np.array(ang)
-    pos_error = np.sqrt(np.sum((pos - targets[:, :3]) ** 2, axis=1))
-    ang_error = np.degrees(np.abs((ang[:, 2] - targets[:, 3])))
+    pos_error = np.sqrt(np.sum((pos - target[0:3]) ** 2, axis=1))
+    ang_error = np.degrees(np.abs((ang[:, 2] - target[3])))
     return np.mean(pos_error) + np.mean(ang_error) * 0.1
-    # return np.mean(pos_error)
 
 
 # 定义 EI 采集函数
@@ -70,21 +69,15 @@ if __name__ == "__main__":
         ]
     )
 
-    # 目标轨迹
-    shape_type_traj = 0  # 0: Circle, 1: Four-leaf clover, 2: Spiral
-    length_traj = 5000  # 轨迹长度
-    target_trajectory, name_traj = generate_target_trajectory(
-        shape_type_traj, length_traj
-    )
+    # 目标点
+    start_state = np.array([5, -5, 2, np.pi / 3])
 
     # 初始化样本点
     n_initial_samples = 10
     X_sample = np.random.uniform(bounds[:, 0], bounds[:, 1], (n_initial_samples, 8))
     y_sample = []
     for i in range(n_initial_samples):
-        y_sample.append(
-            simulate_trajectory_multi_control(target_trajectory, X_sample[i])
-        )
+        y_sample.append(simulate_trajectory_multi_control(start_state, X_sample[i]))
     y_sample = np.array(y_sample).reshape(-1, 1)
 
     # 定义高斯过程回归器
@@ -105,7 +98,7 @@ if __name__ == "__main__":
         ]
 
         # 评估目标函数
-        y_next = simulate_trajectory_multi_control(target_trajectory, X_next)
+        y_next = simulate_trajectory_multi_control(start_state, X_next)
 
         print("Iteration {}: pos_error = {}".format(i, y_next))
 
@@ -118,9 +111,27 @@ if __name__ == "__main__":
     y_best = np.min(y_sample)
 
     print("=====================================")
-    print("Optimized trajectory shape:", name_traj, " sim_time:", 0.01 * length_traj)
+    print("Optimized trajectory shape: Fix Point")
     print(f"最优输入: {X_best}, 最优输出: {y_best}")
 
+    length_traj = 5000
     test_fixed_traj(X_best, length=length_traj, shape_type=0)
     test_fixed_traj(X_best, length=length_traj, shape_type=1)
     test_fixed_traj(X_best, length=length_traj, shape_type=2)
+
+
+# x_controller: P: 2.8719129212251318  I: 0  D: 2.9577787387759935
+# y_controller: P: 3.4654414220406156  I: 0  D: 3.209406089980823
+# z_controller: P: 22.42766805546107  I: 0  D: 14.926176370482183
+# atitude_controller: P: 20.9321133728623  I: 0  D: 4.181357369991256
+
+opt_param = [
+    2.8719129212251318,
+    2.9577787387759935,
+    3.4654414220406156,
+    3.209406089980823,
+    22.42766805546107,
+    14.926176370482183,
+    20.9321133728623,
+    4.181357369991256,
+]
