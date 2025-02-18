@@ -1,4 +1,3 @@
-import time
 from EnvUAV.env import YawControlEnv
 import os
 import numpy as np
@@ -47,19 +46,12 @@ def main():
 
     targets = np.vstack([tx, ty, tz, tpsi]).T
 
-    # np.save(path + "/PID_" + name + "_targets.npy", targets)
-
-    start_time = time.time()
     for i in range(length):
         target = targets[i, :]
         env.step(target)
-
         pos.append(env.current_pos.tolist())
         ang.append(env.current_ori.tolist())
     env.close()
-    end_time = time.time()
-    total_time = end_time - start_time
-    print("total_time", total_time)  # 总计算时间
 
     # 打印PID参数
     printPID(env)
@@ -74,7 +66,6 @@ def main():
     ang_error = np.degrees(np.abs((ang[:, 2] - targets[:, 3])))
     print("pos_error", np.mean(pos_error), np.std(pos_error))
     print("ang_error", np.mean(ang_error), np.std(ang_error))
-    print("error_total", np.mean(pos_error) + np.mean(ang_error))
 
     # 画图
     fig = plt.figure()
@@ -88,11 +79,6 @@ def main():
     roll = attitude[:, 0]
     pitch = attitude[:, 1]
     yaw = attitude[:, 2]
-
-    # np.save(file=path+'/Trajectory/quad_uav.npy', arr=position)
-    # np.save(file=path+'/Trajectory/quad_target.npy', arr=targets)
-    # np.save(file=path+'/Trajectory/circle_uav.npy', arr=position)
-    # np.save(file=path+'/Trajectory/circle_target.npy', arr=targets)
 
     ax.plot(px, py, pz, label="track")
     ax.plot(tx, ty, tz, label="target")
@@ -137,8 +123,6 @@ def main():
 
     pos = np.array(pos)
     ang = np.array(ang)
-    # np.save(path + "/PID_" + name + "_pos.npy", pos)
-    # np.save(path + "/PID_" + name + "_ang.npy", ang)
 
     # 动画
     animation_Trajectory(

@@ -4,29 +4,6 @@ import mpl_toolkits.mplot3d.axes3d as p3
 from matplotlib import animation
 
 
-def printPID(env):
-    x_param = [env.x_controller.P, env.x_controller.I, env.x_controller.D]
-    y_param = [env.y_controller.P, env.y_controller.I, env.y_controller.D]
-    z_param = [env.z_controller.P, env.z_controller.I, env.z_controller.D]
-    attitude_param = [
-        env.attitude_controller.P,
-        env.attitude_controller.I,
-        env.attitude_controller.D,
-    ]
-    print("x_controller: P:", x_param[0], " I:", x_param[1], " D:", x_param[2])
-    print("y_controller: P:", y_param[0], " I:", y_param[1], " D:", y_param[2])
-    print("z_controller: P:", z_param[0], " I:", z_param[1], " D:", z_param[2])
-    print(
-        "atitude_controller: P:",
-        attitude_param[0],
-        " I:",
-        attitude_param[1],
-        " D:",
-        attitude_param[2],
-    )
-    print("=====================================")
-
-
 # 计算峰值 Peak value
 def calculate_peak(x, target):
     target = np.abs(target - x[0])  # 目标距离
