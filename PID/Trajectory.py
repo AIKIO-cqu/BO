@@ -30,8 +30,7 @@ def main():
         tx = 2 * np.sin(2 * np.pi * index) * np.cos(np.pi * index)
         ty = 2 * np.sin(2 * np.pi * index) * np.sin(np.pi * index)
         tz = -np.sin(2 * np.pi * index) * np.cos(np.pi * index) - np.sin(
-            2 * np.pi * index
-        ) * np.sin(np.pi * index)
+            2 * np.pi * index) * np.sin(np.pi * index)
         tpsi = np.sin(4 * np.pi * index) * np.pi / 4 * 3
     elif shape_type == 2:
         name = "Spiral"  # 半径先增大后减小的螺旋形状

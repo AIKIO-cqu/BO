@@ -73,6 +73,8 @@ class YawControlEnv:
         return self._get_s()
 
     def step(self, target):
+        self.target = target
+
         x_a = self.x_controller.computControl(self.current_pos[0], target[0])
         y_a = self.y_controller.computControl(self.current_pos[1], target[1])
         z_a = self.z_controller.computControl(self.current_pos[2], target[2])
@@ -89,14 +91,11 @@ class YawControlEnv:
 
         self.target_ori = [roll, pitch, yaw]  # 目标角度
 
-        # print(p.getMatrixFromQuaternion(p.getQuaternionFromEuler([roll, pitch, yaw])))
         R = np.reshape(
             p.getMatrixFromQuaternion(p.getQuaternionFromEuler([roll, pitch, yaw])),
             [3, 3],
         )
-        # f = np.dot([fx, fy, fz], R[:, 2])
 
-        # f = fz / np.cos(self.current_ori[0]) / np.cos(self.current_ori[1])
         f = fz / np.cos(roll) / np.cos(pitch)
         tau = self.attitude_controller.computControl(
             self.current_ori, [roll, pitch, yaw], self.current_ang_vel
@@ -130,67 +129,35 @@ class YawControlEnv:
         s_ = self._get_s()
         r = self._get_r()
         done = False
-        infor = None
-        return s_, r, done, infor
+        info = None
+        return s_, r, done, info
 
     def _get_s(self):
-        return self._get_y_s(self.target[1])
+        pos_acc = (self.current_vel - self.last_vel) / self.time_step
+        ang_acc = (self.current_ang_vel - self.last_ang_vel) / self.time_step
+        s = np.concatenate(
+            [
+                self.current_pos,
+                self.current_vel,
+                pos_acc,
+                self.current_ori,
+                self.current_ang_vel,
+                ang_acc,
+            ]
+        )
+        return s
 
     def _get_r(self):
-        last_y = self.last_pos[1]
-        current_y = self.current_pos[1]
-        target = self.target[1]
-        r = abs(target - last_y) - abs(target - current_y)
+        current_pos_error = np.sqrt(np.sum((self.current_pos - self.target[:3]) ** 2))
+        last_pos_error = np.sqrt(np.sum((self.last_pos - self.target[:3]) ** 2))
+        r_pos = last_pos_error - current_pos_error
+
+        current_ang_error = np.degrees(np.abs(_get_diff(self.current_ori[2], self.target[3])))
+        last_ang_error = np.degrees(np.abs(_get_diff(self.last_ori[2], self.target[3])))
+        r_ang = last_ang_error - current_ang_error
+        
+        r = [r_pos, r_ang]
         return r
-
-    def _get_x_s(self, target):
-        x = self.current_pos[0]
-        x_v = self.current_vel[0]
-        x_acc = (self.current_vel[0] - self.last_vel[0]) / self.time_step
-
-        z = self.current_pos[2]
-        z_v = self.current_vel[2]
-        z_acc = (self.current_vel[2] - self.last_vel[2]) / self.time_step
-
-        x_ang = self.current_matrix[0, 2]
-        x_ang_v = (self.current_matrix[0, 2] - self.last_matrix[0, 2]) / self.time_step
-
-        s = [target - x, x_v, x_acc, self.target[2] - z, z_v, z_acc, x_ang, x_ang_v]
-        return s
-
-    def _get_y_s(self, target):
-        y = self.current_pos[1]
-        y_v = self.current_vel[1]
-        y_acc = (self.current_vel[1] - self.last_vel[1]) / self.time_step
-
-        z = self.current_pos[2]
-        z_v = self.current_vel[2]
-        z_acc = (self.current_vel[2] - self.last_vel[2]) / self.time_step
-
-        y_ang = self.current_matrix[1, 2]
-        y_ang_v = (self.current_matrix[1, 2] - self.last_matrix[1, 2]) / self.time_step
-
-        # s = [target - y, y_v, y_acc, self.target[2]-z, z_v, z_acc, y_ang, y_ang_v]
-        s = [target - y, y_v, y_acc, y_ang, y_ang_v]
-        return s
-
-    def _get_z_s(self, target):
-        z = self.current_pos[2]
-        z_v = self.current_vel[2]
-        z_acc = (self.current_vel[2] - self.last_vel[2]) / self.time_step
-        target = target
-
-        s = [target - z, z_v, z_acc]
-        return s
-
-    def _get_ang_s(self, target, dim):
-        ang = self.current_ori[dim]
-        ang_v = self.current_ang_vel[dim]
-        ang_acc = (self.current_ang_vel[dim] - self.last_ang_vel[dim]) / self.time_step
-        target = target
-        diff = _get_diff(ang, target)
-        s = [diff, ang_v, ang_acc]
-        return s
 
 
 def _get_diff(ang, target):

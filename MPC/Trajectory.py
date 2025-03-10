@@ -1,6 +1,7 @@
 from EnvUAV.env import YawControlEnv
 import os
 import numpy as np
+import time
 import matplotlib.pyplot as plt
 from utils import animation_Trajectory
 
@@ -46,6 +47,7 @@ def main():
 
     targets = np.vstack([tx, ty, tz, tpsi]).T
 
+    start = time.time()
     for i in range(length):
         print(i)
         target = targets[i, :]
@@ -53,6 +55,7 @@ def main():
         pos.append(env.current_pos.tolist())
         ang.append(env.current_ori.tolist())
 
+    print(f"Total time: {time.time() - start:.2f}s")
     # 将 pos 和 ang 列表转换为 NumPy 数组
     pos = np.array(pos)
     ang = np.array(ang)

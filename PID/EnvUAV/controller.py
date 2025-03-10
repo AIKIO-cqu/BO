@@ -38,9 +38,6 @@ class AttitudePID:
         self.I = I
         self.D = D
 
-        # 初始化积分误差
-        self.integral_error = np.zeros(3)  # 误差为3维向量
-
     def reset(self):
         pass
 

@@ -4,7 +4,6 @@ from .surrounding import Surrounding
 from .controller import AttitudePID, PositionPID
 import numpy as np
 import pybullet as p
-from .windModel import Wind
 import copy
 from scipy.integrate import ode
 
@@ -33,9 +32,7 @@ class YawControlEnv:
         self.current_ang_vel = self.last_ang_vel = None
         self.target = None
         self.uav = None
-
         self.count_step = 0
-        self.wind_model = Wind('SINE', 2.0, 90, -15)
 
         self.x_controller = PositionPID(P=1, I=0, D=0.77)
         self.y_controller = PositionPID(P=1, I=0, D=0.77)
@@ -112,11 +109,6 @@ class YawControlEnv:
         fy = self.uav.M * 5 * y_a
         fz = self.uav.M * (self.uav.G + 5 * z_a)
 
-        # # 添加风力扰动
-        # [velW, qW1, qW2] = self.wind_model.randomWind(self.time)
-        # fx += velW * np.cos(qW1) * np.cos(qW2) * 0.02
-        # fy += velW * np.sin(qW1) * np.cos(qW2) * 0.02
-        # fz += velW * np.sin(qW2) * 0.02
 
         yaw = target[3]
         roll = np.arcsin(
@@ -140,11 +132,6 @@ class YawControlEnv:
         tau_roll = 20 * self.uav.J_xx * tau[0]
         tau_pitch = 20 * self.uav.J_yy * tau[1]
         tau_yaw = 20 * self.uav.J_zz * tau[2]
-
-        # # 添加风力扰动
-        # tau_roll += velW * np.cos(qW1) * np.cos(qW2) * 0.001 * 0.0397
-        # tau_pitch += velW * np.sin(qW1) * np.cos(qW2) * 0.001 * 0.0397
-        # tau_yaw += velW * np.sin(qW2) * 0.001 * 0.0397
 
         self.uav.apply_action(np.array([f, tau_roll, tau_pitch, tau_yaw]), self.time)
         p.stepSimulation()
