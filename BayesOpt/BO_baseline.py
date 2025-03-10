@@ -119,6 +119,8 @@ if __name__ == "__main__":
 
     # 获取最优参数
     X_best = X_sample[np.argmin(y_sample)]
+    X_best = [X_best[0], X_best[1], X_best[2], X_best[3], 
+              X_best[4], X_best[5], X_best[6], X_best[7]]
     y_best = np.min(y_sample)
 
     print("=====================================")

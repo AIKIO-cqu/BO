@@ -171,6 +171,8 @@ if __name__ == "__main__":
 
     # 获取最优参数
     X_best = X_sample[np.argmin(y_sample)]
+    X_best = [X_best[0], X_best[1], X_best[2], X_best[3], 
+              X_best[4], X_best[5], X_best[6], X_best[7]]
     y_best = np.min(y_sample)
 
     # 定义存储文件路径
@@ -180,10 +182,10 @@ if __name__ == "__main__":
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     # 将结果存储到文件中
-    with open(file_path, "a") as file:
-        file.write(
-            f"Time: {timestamp}, X_best: {X_best.tolist()}, pos+{ANG_WEIGHT}*ang, {name_traj}\n"
-        )
+    # with open(file_path, "a") as file:
+    #     file.write(
+    #         f"Time: {timestamp}, X_best: {X_best.tolist()}, pos+{ANG_WEIGHT}*ang, {name_traj}\n"
+    #     )
 
     print("=====================================")
     print("Optimized trajectory shape:", name_traj, " sim_time:", 0.01 * length_traj)

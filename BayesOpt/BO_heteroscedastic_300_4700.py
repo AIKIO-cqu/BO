@@ -212,6 +212,8 @@ if __name__ == "__main__":
 
     # 获取第一阶段的最优参数
     X_best_stage1 = X_sample_1[np.argmin(y_sample_1)]
+    X_best_stage1 = [X_best_stage1[0], X_best_stage1[1], X_best_stage1[2], X_best_stage1[3],
+                     X_best_stage1[4], X_best_stage1[5], X_best_stage1[6], X_best_stage1[7]]
     print(f"Best PID parameters for first 300 steps: {X_best_stage1}")
 
     # 阶段 2：后4700步========================================
@@ -267,6 +269,8 @@ if __name__ == "__main__":
 
     # 获取第二阶段的最优参数
     X_best_stage2 = X_sample_2[np.argmin(y_sample_2)]
+    X_best_stage2 = [X_best_stage2[0], X_best_stage2[1], X_best_stage2[2], X_best_stage2[3],
+                     X_best_stage2[4], X_best_stage2[5], X_best_stage2[6], X_best_stage2[7]]
     print(f"Best PID parameters for remaining 4700 steps: {X_best_stage2}")
     print(f"Total time: {time.time() - start:.2f}s")
 
@@ -279,6 +283,3 @@ if __name__ == "__main__":
     test_fixed_traj_300_4700(
         X_best_stage1, X_best_stage2, length=length_traj, shape_type=2
     )
-
-# 300 steps: [ 2.99895769  1.02706347  4.81240293  1.49424745 26.99040625  8.48343811 28.21737801  2.88416091]
-# 4700 steps: [ 3.97714295  0.79234833  3.77673198  0.20185503 23.33532953  5.26957893 11.72830649  0.56970322]
