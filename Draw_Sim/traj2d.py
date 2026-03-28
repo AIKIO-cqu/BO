@@ -5,8 +5,6 @@ from pathlib import Path
 
 DATA_DIR = Path(__file__).resolve().parent / "npy_exchange"
 TRAJ_LENGTH = 5000
-VIEW_AZIM = 45.0
-VIEW_ELEV = 30
 
 CONTROLLER_LABELS = [
     ("PID", "PID"),
@@ -56,26 +54,75 @@ def generate_target_trajectory(shape_type, length):
     return target_trajectory, name
 
 
-def _load_controller_trajs(shape_suffix):
+def _load_controller_series(shape_suffix):
     return {
-        label: load_npy(f"pos_{prefix}_{shape_suffix}.npy")
+        label: {
+            "pos": load_npy(f"pos_{prefix}_{shape_suffix}.npy"),
+            "ang": load_npy(f"ang_{prefix}_{shape_suffix}.npy"),
+        }
         for prefix, label in CONTROLLER_LABELS
     }
 
 
 def _draw_shape(shape_type, shape_suffix):
     targets, _ = generate_target_trajectory(shape_type, TRAJ_LENGTH)
-    controller_trajs = _load_controller_trajs(shape_suffix)
+    controller_series = _load_controller_series(shape_suffix)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection="3d")
+    n_steps = targets.shape[0]
     for _, label in CONTROLLER_LABELS:
-        traj = controller_trajs[label]
-        ax.plot(traj[:, 0], traj[:, 1], traj[:, 2], label=label)
+        n_steps = min(
+            n_steps,
+            controller_series[label]["pos"].shape[0],
+            controller_series[label]["ang"].shape[0],
+        )
+    dt = np.arange(n_steps)
+    targets = targets[:n_steps]
 
-    ax.plot(targets[:, 0], targets[:, 1], targets[:, 2], label="Ref Traj", color="black")
-    ax.view_init(azim=VIEW_AZIM, elev=VIEW_ELEV)
-    plt.legend()
+    default_colors = plt.rcParams["axes.prop_cycle"].by_key().get("color", [])
+    if not default_colors:
+        default_colors = ["C0", "C1", "C2", "C3", "C4", "C5", "C6"]
+    color_map = {
+        label: default_colors[idx % len(default_colors)]
+        for idx, (_, label) in enumerate(CONTROLLER_LABELS)
+    }
+
+    fig = plt.figure(figsize=(10, 10))
+    fig.suptitle(f"{shape_suffix} 2D Comparison")
+
+    ax1 = plt.subplot(4, 1, 1)
+    ax2 = plt.subplot(4, 1, 2)
+    ax3 = plt.subplot(4, 1, 3)
+    ax4 = plt.subplot(4, 1, 4)
+
+    ax1.plot(dt, targets[:, 0], label="x_ref", color="black", linestyle="--")
+    ax2.plot(dt, targets[:, 1], label="y_ref", color="black", linestyle="--")
+    ax3.plot(dt, targets[:, 2], label="z_ref", color="black", linestyle="--")
+    ax4.plot(dt, targets[:, -1], label="yaw_ref", color="black", linestyle="--")
+
+    for _, label in CONTROLLER_LABELS:
+        pos = controller_series[label]["pos"][:n_steps]
+        yaw = controller_series[label]["ang"][:n_steps, 2]
+        color = color_map[label]
+        ax1.plot(dt, pos[:, 0], label=f"x_{label}", color=color)
+        ax2.plot(dt, pos[:, 1], label=f"y_{label}", color=color)
+        ax3.plot(dt, pos[:, 2], label=f"z_{label}", color=color)
+        ax4.plot(dt, yaw, label=f"yaw_{label}", color=color)
+
+    ax1.legend(loc="upper right")
+    ax2.legend(loc="upper right")
+    ax3.legend(loc="upper right")
+    ax4.legend(loc="upper right")
+
+    ax4.set_xlabel("Time (step)")
+    ax1.set_ylabel("x (m)")
+    ax2.set_ylabel("y (m)")
+    ax3.set_ylabel("z (m)")
+    ax4.set_ylabel("yaw (rad)")
+
+    for ax in [ax1, ax2, ax3, ax4]:
+        ax.grid(True, linestyle="--", alpha=0.6)
+
+    plt.tight_layout(rect=(0, 0, 1, 0.97))
     plt.show()
 
 
