@@ -17,8 +17,27 @@ CONTROLLER_LABELS = [
 ]
 
 
-def load_npy(filename):
-    return np.load(DATA_DIR / filename)
+def load_npy(filename, _seen=None):
+    path = DATA_DIR / filename
+    try:
+        return np.load(path)
+    except ValueError as exc:
+        # Some datasets store a tiny text alias that points to another .npy file.
+        # Resolve those aliases to keep loading robust across environments.
+        if _seen is None:
+            _seen = set()
+        if path in _seen:
+            raise ValueError(f"Circular npy alias detected: {path}") from exc
+        _seen.add(path)
+
+        data = path.read_bytes()
+        if len(data) > 256:
+            raise
+
+        target = data.decode("utf-8", errors="ignore").strip()
+        if not target.endswith(".npy"):
+            raise
+        return load_npy(target, _seen=_seen)
 
 
 # 生成目标轨迹
@@ -64,7 +83,7 @@ def _load_controller_series(shape_suffix):
     }
 
 
-def _draw_shape(shape_type, shape_suffix):
+def _draw_shape(shape_type, shape_suffix, title_suffix=None):
     targets, _ = generate_target_trajectory(shape_type, TRAJ_LENGTH)
     controller_series = _load_controller_series(shape_suffix)
 
@@ -87,31 +106,32 @@ def _draw_shape(shape_type, shape_suffix):
     }
 
     fig = plt.figure(figsize=(10, 10))
-    fig.suptitle(f"{shape_suffix} 2D Comparison")
+    title = title_suffix if title_suffix is not None else shape_suffix
+    fig.suptitle(f"{title} Comparison")
 
     ax1 = plt.subplot(4, 1, 1)
     ax2 = plt.subplot(4, 1, 2)
     ax3 = plt.subplot(4, 1, 3)
     ax4 = plt.subplot(4, 1, 4)
 
-    ax1.plot(dt, targets[:, 0], label="x_ref", color="black", linestyle="--")
-    ax2.plot(dt, targets[:, 1], label="y_ref", color="black", linestyle="--")
-    ax3.plot(dt, targets[:, 2], label="z_ref", color="black", linestyle="--")
-    ax4.plot(dt, targets[:, -1], label="yaw_ref", color="black", linestyle="--")
+    ax1.plot(dt, targets[:, 0], label="Ref Traj", color="black")
+    ax2.plot(dt, targets[:, 1], label="Ref Traj", color="black")
+    ax3.plot(dt, targets[:, 2], label="Ref Traj", color="black")
+    ax4.plot(dt, targets[:, -1], label="Ref Traj", color="black")
 
     for _, label in CONTROLLER_LABELS:
         pos = controller_series[label]["pos"][:n_steps]
         yaw = controller_series[label]["ang"][:n_steps, 2]
         color = color_map[label]
-        ax1.plot(dt, pos[:, 0], label=f"x_{label}", color=color)
-        ax2.plot(dt, pos[:, 1], label=f"y_{label}", color=color)
-        ax3.plot(dt, pos[:, 2], label=f"z_{label}", color=color)
-        ax4.plot(dt, yaw, label=f"yaw_{label}", color=color)
+        ax1.plot(dt, pos[:, 0], label=f"{label}", color=color)
+        ax2.plot(dt, pos[:, 1], label=f"{label}", color=color)
+        ax3.plot(dt, pos[:, 2], label=f"{label}", color=color)
+        ax4.plot(dt, yaw, label=f"{label}", color=color)
 
-    ax1.legend(loc="upper right")
-    ax2.legend(loc="upper right")
-    ax3.legend(loc="upper right")
-    ax4.legend(loc="upper right")
+    # ax1.legend(loc="upper right")
+    # ax2.legend(loc="upper right")
+    # ax3.legend(loc="upper right")
+    # ax4.legend(loc="upper right")
 
     ax4.set_xlabel("Time (step)")
     ax1.set_ylabel("x (m)")
@@ -131,7 +151,7 @@ def draw_Ellipse():
 
 
 def draw_Four():
-    _draw_shape(shape_type=1, shape_suffix="Four")
+    _draw_shape(shape_type=1, shape_suffix="Four", title_suffix="Four-leaf clover")
 
 
 def draw_Spiral():

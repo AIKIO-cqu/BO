@@ -28,46 +28,69 @@ def fit_poly_curve(x, y, degree):
 
 
 def plot_reward_and_noise(x, rewards, estimated_rewards, noise_levels, estimated_noise):
-    plt.figure(figsize=(10, 4))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.8), dpi=140)
+    # fig.patch.set_facecolor("#f7f9fc")
 
-    plt.subplot(1, 2, 1)
-    plt.scatter(x, rewards, label="True Reward g", color="black", s=10, alpha=0.7)
-    plt.plot(
+    ax0, ax1 = axes
+    for ax in axes:
+        ax.set_facecolor("#ffffff")
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.grid(True, linestyle="--", linewidth=0.8, alpha=0.35)
+        ax.minorticks_on()
+        ax.grid(which="minor", linestyle=":", linewidth=0.5, alpha=0.2)
+
+    ax0.scatter(
+        x,
+        rewards,
+        label="True Reward $g$",
+        color="#334155",
+        s=16,
+        alpha=0.55,
+        edgecolors="white",
+        linewidths=0.4,
+        zorder=2,
+    )
+    ax0.plot(
         x,
         estimated_rewards,
-        label="Estimated Reward $\hat{g}$",
-        color="red",
-        linewidth=2,
+        label="Estimated Reward $\\hat{g}$",
+        color="#ef4444",
+        linewidth=2.4,
+        zorder=3,
     )
-    plt.xlabel("$\\sigma_\\epsilon$")
-    plt.ylabel("Expected Cumulative Reward")
-    plt.legend()
-    plt.title("Expected Reward Function")
-    plt.grid()
+    ax0.set_xlabel("$\\sigma_\\epsilon$")
+    ax0.set_ylabel("Expected Cumulative Reward")
+    ax0.set_title("Expected Reward Function", fontsize=11, pad=8)
+    ax0.legend(frameon=True, framealpha=0.9, edgecolor="#cbd5e1")
 
-    plt.subplot(1, 2, 2)
-    plt.scatter(
+    ax1.scatter(
         x,
         noise_levels,
-        label="$|g - \hat{g}|$",
-        color="gray",
-        s=10,
-        alpha=0.7,
+        label="$|g - \\hat{g}|$",
+        color="#64748b",
+        s=16,
+        alpha=0.55,
+        edgecolors="white",
+        linewidths=0.4,
+        zorder=2,
     )
-    plt.plot(
+    ax1.plot(
         x,
         estimated_noise,
         label="Fitted Noise $\\sigma_\\nu$",
-        color="green",
-        linewidth=2,
+        color="#16a34a",
+        linewidth=2.4,
+        zorder=3,
     )
-    plt.xlabel("$\\sigma_\\epsilon$")
-    plt.ylabel("Noise")
-    plt.legend()
-    plt.title("Noise Estimation")
-    plt.grid()
+    # ax1.fill_between(x, 0, estimated_noise, color="#22c55e", alpha=0.12, zorder=1)
+    ax1.set_xlabel("$\\sigma_\\epsilon$")
+    ax1.set_ylabel("Noise")
+    ax1.set_title("Noise Estimation", fontsize=11, pad=8)
+    ax1.legend(frameon=True, framealpha=0.9, edgecolor="#cbd5e1")
 
-    plt.tight_layout()
+    fig.suptitle("Polynomial Fitting of Reward and Noise", fontsize=13, y=1.02)
+    fig.tight_layout()
     plt.show()
 
 

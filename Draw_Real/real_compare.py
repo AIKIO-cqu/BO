@@ -54,11 +54,17 @@ print(f"yaw_error_HBO: {np.mean(yaw_error_HBO):.3f}")
 # ============================= 3D plot =============================
 fig = plt.figure()
 ax = fig.add_subplot(111, projection="3d")
-ax.plot(x_ref[:, 0], x_ref[:, 1], x_ref[:, 2], label="ref")
-ax.plot(x_baseline[:, 0], x_baseline[:, 1], x_baseline[:, 2], label="BO")
-ax.plot(x_HBO[:, 0], x_HBO[:, 1], x_HBO[:, 2], label="HBO")
+ax.plot(x_ref[:, 0], x_ref[:, 1], x_ref[:, 2], label="Ref Traj")
+ax.plot(x_baseline[:, 0], x_baseline[:, 1], x_baseline[:, 2], label="BO-PID")
+ax.plot(x_HBO[:, 0], x_HBO[:, 1], x_HBO[:, 2], label="HBO-PID (Ours)")
 set_3d_axes(ax)
-# plt.legend()
+ax.legend(
+    loc="upper right",
+    bbox_to_anchor=(0.9, 0.9),
+    bbox_transform=ax.transAxes,
+    #字体大小
+    fontsize=13,
+)
 plt.show()
 
 # ============================= Animation =============================
@@ -70,12 +76,12 @@ ax.set_ylabel("Y")
 ax.set_zlabel("Z")
 
 # refenrence trajectory
-ax.plot(x_ref[:, 0], x_ref[:, 1], x_ref[:, 2], lw=1, color="#1f77b4", label="ref")
+ax.plot(x_ref[:, 0], x_ref[:, 1], x_ref[:, 2], lw=1, color="#1f77b4", label="Ref Traj")
 
 # track trajectory
-line_baseline, = ax.plot([], [], [], lw=2, color="#ff7f0e", label="baseline")
+line_baseline, = ax.plot([], [], [], lw=2, color="#ff7f0e", label="BO-PID")
 point_baseline, = ax.plot([], [], [], "o", color="#ff7f0e", markersize=8)
-line_HBO, = ax.plot([], [], [], lw=2, color="#2ca02c", label="HBO")
+line_HBO, = ax.plot([], [], [], lw=2, color="#2ca02c", label="HBO-PID (Ours)")
 point_HBO, = ax.plot([], [], [], "o", color="#2ca02c", markersize=8)
 
 # time text
@@ -118,24 +124,24 @@ plt.show()
 # ============================= 2D plot (type 1) =============================
 fig = plt.figure()
 ax1 = plt.subplot(4, 1, 1)
-ax1.plot(dt, x_ref[:, 0], label="x_ref")
-ax1.plot(dt, x_baseline[:, 0], label="x_baseline")
-ax1.plot(dt, x_HBO[:, 0], label="x_HBO")
+ax1.plot(dt, x_ref[:, 0], label="Ref Traj")
+ax1.plot(dt, x_baseline[:, 0], label="BO-PID")
+ax1.plot(dt, x_HBO[:, 0], label="HBO-PID (Ours)")
 ax1.legend(loc="upper right")
 ax2 = plt.subplot(4, 1, 2)
-ax2.plot(dt, x_ref[:, 1], label="y_ref")
-ax2.plot(dt, x_baseline[:, 1], label="y_baseline")
-ax2.plot(dt, x_HBO[:, 1], label="y_HBO")
+ax2.plot(dt, x_ref[:, 1], label="Ref Traj")
+ax2.plot(dt, x_baseline[:, 1], label="BO-PID")
+ax2.plot(dt, x_HBO[:, 1], label="HBO-PID (Ours)")
 ax2.legend(loc="upper right")
 ax3 = plt.subplot(4, 1, 3)
-ax3.plot(dt, x_ref[:, 2], label="z_ref")
-ax3.plot(dt, x_baseline[:, 2], label="z_baseline")
-ax3.plot(dt, x_HBO[:, 2], label="z_HBO")
+ax3.plot(dt, x_ref[:, 2], label="Ref Traj")
+ax3.plot(dt, x_baseline[:, 2], label="BO-PID")
+ax3.plot(dt, x_HBO[:, 2], label="HBO-PID (Ours)")
 ax3.legend(loc="upper right")
 ax4 = plt.subplot(4, 1, 4)
-ax4.plot(dt, x_ref[:, -1], label="yaw_ref")
-ax4.plot(dt, x_yaw_baseline, label="yaw_baseline")
-ax4.plot(dt, x_yaw_HBO, label="yaw_HBO")
+ax4.plot(dt, x_ref[:, -1], label="Ref Traj")
+ax4.plot(dt, x_yaw_baseline, label="BO-PID")
+ax4.plot(dt, x_yaw_HBO, label="HBO-PID (Ours)")
 ax4.legend(loc="upper right")
 for ax in [ax1, ax2, ax3, ax4]:
     ax.grid(True, linestyle="--", alpha=0.6)

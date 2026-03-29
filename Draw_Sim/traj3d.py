@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 
-DATA_DIR = Path(__file__).resolve().parent / "npy_exchange"
+DATA_DIR = Path(__file__).resolve().parent / "npy"
 TRAJ_LENGTH = 5000
 VIEW_AZIM = 45.0
 VIEW_ELEV = 30
@@ -19,8 +19,26 @@ CONTROLLER_LABELS = [
 ]
 
 
-def load_npy(filename):
-    return np.load(DATA_DIR / filename)
+def load_npy(filename, _seen=None):
+    path = DATA_DIR / filename
+    try:
+        return np.load(path)
+    except ValueError as exc:
+        # Some datasets use tiny text alias files that point to another .npy file.
+        if _seen is None:
+            _seen = set()
+        if path in _seen:
+            raise ValueError(f"Circular npy alias detected: {path}") from exc
+        _seen.add(path)
+
+        data = path.read_bytes()
+        if len(data) > 256:
+            raise
+
+        target = data.decode("utf-8", errors="ignore").strip()
+        if not target.endswith(".npy"):
+            raise
+        return load_npy(target, _seen=_seen)
 
 
 # 生成目标轨迹
@@ -75,7 +93,7 @@ def _draw_shape(shape_type, shape_suffix):
 
     ax.plot(targets[:, 0], targets[:, 1], targets[:, 2], label="Ref Traj", color="black")
     ax.view_init(azim=VIEW_AZIM, elev=VIEW_ELEV)
-    plt.legend()
+    # plt.legend()
     plt.show()
 
 
